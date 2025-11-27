@@ -4,8 +4,6 @@ ARQUIVO="historico.json"
 class usuario_model:
     """Classe que representa um filme no sistema de cinema"""
     def __init__(self, id_produto, nome_produto):
-        """Note que agora recebe 'sala_nome' diretamente da consulta SQL (JOIN).
-        """
         self.id = id_produto
         self.nome = nome_produto
 class usuario_model:
@@ -14,7 +12,7 @@ class usuario_model:
     def __init__(self, id_usuario, nome, matricula):
         self.id = id_usuario
         self.nome = nome
-        self.matricula = matricula #Identificador único do usuário
+        self.matricula = matricula 
 class item_model:
     """Classe que representa um filme no sistema de cinema"""
     
@@ -42,7 +40,6 @@ class item_model:
             status_produto=row[5]
         )
 class MovimentacaoModel:
-    """Define o histórico de empréstimo/devolução (Resolve o problema João vs. Pedro)"""
     def __init__(self, id_movimentacao, item_id, usuario_id, data_emprestimo: datetime, data_devolucao_prevista: datetime, data_devolucao_real: datetime = None):
         self.id = id_movimentacao
         self.item_id = item_id      
