@@ -4,7 +4,7 @@ from tkinter import ttk
 produtos = {
     "Audiovisual e Apresentação": {
         "Projetor": {
-            "quantidade": 4,
+            "quantidade": 39,
             "detalhes": [
                 {"Nome": "Projetor Epson", "Patrimonio": "AV1001", "Status": "Disponível", "Posse": "-"},
                 {"Nome": "Projetor LG", "Patrimonio": "AV1002", "Status": "Em uso", "Posse": "Carlos"},
