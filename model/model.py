@@ -84,7 +84,17 @@ class conexaobanco_model:
         except Exception as e:
             self.conn.rollback()
             return False
-     
+    def autenticar_usuario(self,matricula:str):
+        query = """
+            SELECT id_usuario, nome, matricula, senha
+            FROM usuario 
+            WHERE matricula = %s; 
+        """
+        row = self._executar_query(query, (matricula,), fetchone=True)
+        if row:
+            return (row)
+        return None
+
 
 class historico:
     def __init__(self):
