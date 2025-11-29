@@ -94,21 +94,79 @@ class conexaobanco_model:
         if row:
             return (row)
         return None
+    def inserir_produto(self,item_obj):
+        query="""
+            INSERT INTO produtos(
+                nome_produto,numero_patrimonio,categoria_produto,localizacao_produto,status_produto
+                ) (VALUES %s,%s,%s,%s,%s);
+            """
+        parametros=(
+            item_obj.nome,
+            item_obj.patrimonio,
+            item_obj.tipo,
+            item_obj.localizacao,
+            item_obj.status
+            )
+        try:
+            self._executar_query(query , parametros, fetchone=False,commit=True)
+            return True
+        except Exception as e:
+            self.conn.rollback()
+            return False
+    def cadastrar_usuario(self,usuario_obj):
+        query="""
+            INSERT INTO usuarios(
+            usuario,matricula,senha
+            ) VALUES(%s,%s,%s);
+            """
+        parametros=(
+            usuario_obj.nome,
+            usuario_obj.matricula,
+            usuario_obj.senha
+            )
+        try:
+            self._executar_query(query,parametros,fetchone=False,commit=True)
+            return True
+        except Exception as e:
+            self.conn.rollback()
+            return False
+
+        
 
 
 class historico:
     def __init__(self):
-        self.salvar_dados()
-    def salvar_dados(self):
-        dados_a_salvar = {
-            "historico_frases": self.historico,
-            "total_sorteios": self.total_frases,
-            "frases_personalizadas": self.frases_personalizadas,
-            "frases_favoritas":self.frases_favoritas,
-            "ultima_atualizacao": datetime.datetime.now().isoformat()
-        }
+        pass
+    @staticmethod
+    def carregar_dados():
+        dados_iniciais= {
+            "eventos":[],
+            "ultima_atualizacao":None
+           }
         try:
-            with open(ARQUIVO, 'w', encoding='utf-8') as f:
-                json.dump(dados_a_salvar, f, indent=4)
+            with open(ARQUIVO, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return dados_iniciais
+        
+        except json.JSONDecodeError:
+            print ("erro")
+            return dados_iniciais
+           
+    @staticmethod
+    def registrar_historico(tipo_evento:str,detalhes:dict):
+        dados=historico.carregar_dados()
+        novo_registro={
+            "timestamp": datetime.datetime.now().isoformat(),
+            "tipo": tipo_evento,
+            "detalhes": detalhes
+        }
+        dados["eventos"].append(novo_registro)
+        dados["ultima_atualizacao"]=datetime.datetime.now().isoformat()
+        try:
+            with open (ARQUIVO,'w',encoding='utf-8') as f:
+                json.dump(dados,f,indent=4)
+                return True
         except Exception as e:
-            print(f"Erro ao salvar dados no arquivo {ARQUIVO}: {e}")
+            print("erro",e)
+            return False
