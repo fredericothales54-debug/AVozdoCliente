@@ -167,7 +167,7 @@ class conexaobanco_model:
        
         query_status_item = """
             UPDATE ITENS
-            SET id_status = 2, -- ID para 'EM USO'
+            SET id_status = 2, 
                 id_locais = %s 
             WHERE id_itens = %s;
         """
