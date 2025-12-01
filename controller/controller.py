@@ -13,6 +13,8 @@ class appcomtroll:
         self._historico = []
         self.db_model = db_model_class(self.db_conn)
         self.running = True
+
+    
     
     def iniciar_app(self):
         self.view.mostrar_mensagem("Bem-vindo ao sistema!")
@@ -44,7 +46,47 @@ class appcomtroll:
         # 1. Obter ID do item e ID do usuário via View.
         # 2. Chamar o Model para criar um registro na tabela Movimentacao.
         self.view.mostrar_mensagem("Função de Empréstimo a ser implementada...")
-    
+        itens_disponivel = self.db_model.listar_itens_disponivel()
+        if not itens_disponivel:
+            self.view.mostrar_mensagem("Não há itens disponíveis para empréstimo no momento.")
+            return
+        self.view.mostrar_mensagem("itens disponiveis:")
+        for item in itens_disponiveis:
+            self.view.mostar_mensagem(f"ID: {item.id} | Nome: {item.nome} | Patrimonio: {item.patrimonio}")
+        try:
+            item_id = int(self.view.obter_entrada("digite o ID do item a ser emprestado: ")) 
+            usuario_id = int(self.view.obter_entrada("digite o ID o usuario (pessoa que pega o item): "))
+            id_local_emprestimo = int(self.view.obter_entrada("Digite o ID do local de destino (ex: 2 para 'Em Uso'): "))
+            dias_previstos = int(self.view.obter_entrada("Digite a previsão de dias para devolução (ex: 7): "))
+        
+        except ValueError:
+            self.view.mostar_mensagem("ID ou dias deve ser um numero valido.")
+            return
+        item_obj = self.db_model.obter_item_por_id(item_id)
+        if not item_obj:
+            self.view.mostar_mensagem(f"item com ID {item_id} nao encontrado.")
+            return
+        if item_obj.status != 'DISPONIVEL':
+            self.view.mostar_mensagem(f" item '{item_obj.nome}' nao esta disponivel para emprestimo (status: {item_obj.status}.")
+            return
+        sucesso = self.db_model.emprestar_item(item_id, usuario_id, id_local_emprestimo, dias_previstos)
+
+        if sucesso:
+            self.view.mostar_mensagem(f" emprestimo do item '{item_obj.nome}' (patrimonio: {item_obj.patrimonio}) para usuario ID {usuario_id} registrado com sucesso!")
+            self._historico.registrar_historico(
+                tipo_evento ="EMPRESTIMO" ,
+                detalhes={
+                    "item_id": item_id,
+                    "item_nome": item_obj.nome,
+                    "usuario_id": usuario_id,
+                    "data_prevista": (datatime.datatime.now() + datetime.timedelta(days=dias_previstos)).strftime("%Y-%m-%d")
+                }
+            )
+        else:
+            self.view.mostar_mensagem(f" erro ao registar o emprestimo. transaçao desfeita (rollback).")
+
+
+
     def finalizar_app(self):
         """Fecha a conexão e encerra o aplicativo."""
         self.running = False
