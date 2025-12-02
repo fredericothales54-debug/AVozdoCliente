@@ -137,6 +137,19 @@ class conexaobanco_model:
         except Exception as e:
             self.conn.rollback()
             return False
+    def deletar_produto(self,item_obj):
+        query="""
+            DELETE FROM ITENS WHERE numero_patrimonio =%s;
+            """
+        parametros=(
+            item_obj.patrimonio
+            )        
+        try:
+            self._executar_query(query , parametros, fetchone=False,commit=True)
+            return True
+        except Exception as e:
+            self.conn.rollback()
+            return False
     def cadastrar_usuario(self,usuario_obj):
         query="""
             INSERT INTO USUARIOS(
