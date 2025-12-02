@@ -1,0 +1,271 @@
+-- Prateleira 1 (id_locais 1-4)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 1', 'A1'),
+('201 - Almoxarifado', 'Prateleira 1', 'A2'),
+('201 - Almoxarifado', 'Prateleira 1', 'A3'),
+('201 - Almoxarifado', 'Prateleira 1', 'A4');
+
+-- Prateleira 2 (id_locais 5-8)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 2', 'A1'),
+('201 - Almoxarifado', 'Prateleira 2', 'A2'),
+('201 - Almoxarifado', 'Prateleira 2', 'A3'),
+('201 - Almoxarifado', 'Prateleira 2', 'A4');
+
+-- Prateleira 3 (id_locais 9-12)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 3', 'A1'),
+('201 - Almoxarifado', 'Prateleira 3', 'A2'),
+('201 - Almoxarifado', 'Prateleira 3', 'A3'),
+('201 - Almoxarifado', 'Prateleira 3', 'A4');
+
+-- Prateleira 4 (id_locais 13-16)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 4', 'A1'),
+('201 - Almoxarifado', 'Prateleira 4', 'A2'),
+('201 - Almoxarifado', 'Prateleira 4', 'A3'),
+('201 - Almoxarifado', 'Prateleira 4', 'A4');
+
+-- Prateleira 5 (id_locais 17-20)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 5', 'A1'),
+('201 - Almoxarifado', 'Prateleira 5', 'A2'),
+('201 - Almoxarifado', 'Prateleira 5', 'A3'),
+('201 - Almoxarifado', 'Prateleira 5', 'A4');
+
+-- Prateleira 6 (id_locais 21-24)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 6', 'A1'),
+('201 - Almoxarifado', 'Prateleira 6', 'A2'),
+('201 - Almoxarifado', 'Prateleira 6', 'A3'),
+('201 - Almoxarifado', 'Prateleira 6', 'A4');
+
+-- Prateleira 7 (id_locais 25-28)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 7', 'A1'),
+('201 - Almoxarifado', 'Prateleira 7', 'A2'),
+('201 - Almoxarifado', 'Prateleira 7', 'A3'),
+('201 - Almoxarifado', 'Prateleira 7', 'A4');
+
+-- Prateleira 8 (id_locais 29-32)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 8', 'A1'),
+('201 - Almoxarifado', 'Prateleira 8', 'A2'),
+('201 - Almoxarifado', 'Prateleira 8', 'A3'),
+('201 - Almoxarifado', 'Prateleira 8', 'A4');
+
+-- Prateleira 9 (id_locais 33-36)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 9', 'A1'),
+('201 - Almoxarifado', 'Prateleira 9', 'A2'),
+('201 - Almoxarifado', 'Prateleira 9', 'A3'),
+('201 - Almoxarifado', 'Prateleira 9', 'A4');
+
+-- Prateleira 10 (id_locais 37-40)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 10', 'A1'),
+('201 - Almoxarifado', 'Prateleira 10', 'A2'),
+('201 - Almoxarifado', 'Prateleira 10', 'A3'),
+('201 - Almoxarifado', 'Prateleira 10', 'A4');
+
+-- Prateleira 11 (id_locais 41-44)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 11', 'A1'),
+('201 - Almoxarifado', 'Prateleira 11', 'A2'),
+('201 - Almoxarifado', 'Prateleira 11', 'A3'),
+('201 - Almoxarifado', 'Prateleira 11', 'A4');
+
+-- Prateleira 12 (id_locais 45-48)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 12', 'A1'),
+('201 - Almoxarifado', 'Prateleira 12', 'A2'),
+('201 - Almoxarifado', 'Prateleira 12', 'A3'),
+('201 - Almoxarifado', 'Prateleira 12', 'A4');
+
+-- Prateleira 13 (id_locais 49-52)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 13', 'A1'),
+('201 - Almoxarifado', 'Prateleira 13', 'A2'),
+('201 - Almoxarifado', 'Prateleira 13', 'A3'),
+('201 - Almoxarifado', 'Prateleira 13', 'A4');
+
+-- Prateleira 14 (id_locais 53-56)
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 14', 'A1'),
+('201 - Almoxarifado', 'Prateleira 14', 'A2'),
+('201 - Almoxarifado', 'Prateleira 14', 'A3'),
+('201 - Almoxarifado', 'Prateleira 14', 'A4');
+
+-- Prateleira 15 (id_locais 57-59) - Apenas 3 posições necessárias
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 15', 'A1'),
+('201 - Almoxarifado', 'Prateleira 15', 'A2'),
+('201 - Almoxarifado', 'Prateleira 15', 'A3');
+
+
+-- ====================================================================
+-- 2. INSERTS NA TABELA NOMES_ITENS
+-- Mapeamento dos itens para suas respectivas categorias.
+-- ====================================================================
+
+-- Categoria 1: Tecnologia e Informática
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Notebook Core i3', 1),
+('Notebook Core i7', 1),
+('Computador Desktop Completo', 1),
+('Monitor 24 polegadas', 1),
+('Estabilizador 500VA', 1),
+('Mouse USB', 1),
+('Teclado USB', 1),
+('Headset com Microfone', 1),
+('Cabo HDMI 1.8m', 1),
+('Cabo VGA 1.5m', 1),
+('Adaptador USB-C -> HDMI', 1),
+('Pen Drive 32GB', 1),
+('Roteador Wi-Fi', 1),
+('Switch 24 portas', 1),
+('Patch Cords diversos', 1),
+('Nobreak 1400VA', 1),
+('Scanner', 1),
+('Impressora Laser', 1),
+('Multifuncional', 1),
+('Leitor de código de barras', 1),
+('Tablet 10"', 1),
+('Câmera de segurança', 1); -- (id_nomes_itens 1 a 22)
+
+-- Categoria 2: Mobiliário e Estrutura
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Mesa de Professor', 2),
+('Mesa de Escritório', 2),
+('Cadeira Giratória', 2),
+('Cadeira Escolar', 2),
+('Armário de Aço 2 portas', 2),
+('Estante de livros', 2),
+('Quadro Branco pequeno', 2),
+('Tripé para projetor', 2),
+('Caixa organizadora plástica', 2),
+('Extensão elétrica 5 tomadas', 2); -- (id_nomes_itens 23 a 32)
+
+-- Categoria 3: Material de Escritório (Consumível)
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Resma de Papel A4', 3),
+('Caneta Azul', 3),
+('Caneta Preta', 3),
+('Caneta Vermelha', 3),
+('Lápis', 3),
+('Borracha', 3),
+('Apontador', 3),
+('Grampeador', 3),
+('Caixa de Grampos', 3),
+('Cola Bastão', 3),
+('Cola Líquida', 3),
+('Post-it bloco pequeno', 3),
+('Caderno 96 folhas', 3),
+('Pasta catálogo', 3),
+('Pasta L', 3),
+('Envelope pardo', 3),
+('Tesoura escolar', 3),
+('Régua 30cm', 3),
+('Fita adesiva', 3),
+('Fita dupla face', 3),
+('Marcador de Quadro Branco', 3); -- (id_nomes_itens 33 a 53)
+
+-- Categoria 4: Audiovisual e Periféricos
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Datashow Projetor', 4),
+('Projetor portátil mini', 4),
+('Caixa de Som Amplificada', 4),
+('Microfone sem fio', 4); -- (id_nomes_itens 54 a 57)
+
+-- Categoria 5: Climatização
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Ar-Condicionado 12.000 BTU', 5),
+('Ar-Condicionado 18.000 BTU', 5); -- (id_nomes_itens 58 a 59)
+
+
+-- ====================================================================
+-- 3. INSERTS NAS TABELAS ITENS E MOVIMENTACOES
+-- Geração de todos os itens individuais com número de patrimônio sequencial
+-- e seus registros de movimentação inicial (Entrada no Almoxarifado).
+-- ====================================================================
+
+-- Variáveis de controle para o loop (simulando a lógica de um script)
+SET TIME ZONE 'America/Sao_Paulo'; -- Configura o fuso horário para o timestamp
+
+DO $$
+DECLARE
+    item_type RECORD;
+    patrimonio_seq INTEGER := 1;
+    id_item_atual INTEGER;
+    current_locais_id INTEGER := 1;
+    item_quantity INTEGER;
+    item_name TEXT;
+    item_id_nomes_itens INTEGER;
+BEGIN
+    -- Estrutura de dados com os IDs de NOMES_ITENS (que são sequenciais de 1 a 59) e suas quantidades.
+    -- O LOCAIS ID também é sequencial, começando em 1, e corresponde ao ID do item (1:1).
+    CREATE TEMP TABLE IF NOT EXISTS item_data (
+        id_nomes_itens INTEGER PRIMARY KEY,
+        nomes_itens TEXT,
+        quantidade INTEGER
+    );
+
+    INSERT INTO item_data (id_nomes_itens, nomes_itens, quantidade) VALUES
+    (1, 'Notebook Core i3', 40), (2, 'Notebook Core i7', 36), (3, 'Computador Desktop Completo', 20), (4, 'Monitor 24 polegadas', 25),
+    (5, 'Estabilizador 500VA', 18), (6, 'Mouse USB', 60), (7, 'Teclado USB', 55), (8, 'Headset com Microfone', 35),
+    (9, 'Cabo HDMI 1.8m', 30), (10, 'Cabo VGA 1.5m', 15), (11, 'Adaptador USB-C -> HDMI', 12), (12, 'Pen Drive 32GB', 40),
+    (13, 'Roteador Wi-Fi', 8), (14, 'Switch 24 portas', 6), (15, 'Patch Cords diversos', 50), (16, 'Nobreak 1400VA', 5),
+    (17, 'Scanner', 2), (18, 'Impressora Laser', 6), (19, 'Multifuncional', 4), (20, 'Leitor de código de barras', 10),
+    (21, 'Tablet 10"', 15), (22, 'Câmera de segurança', 12), (23, 'Mesa de Professor', 15), (24, 'Mesa de Escritório', 10),
+    (25, 'Cadeira Giratória', 25), (26, 'Cadeira Escolar', 120), (27, 'Armário de Aço 2 portas', 8), (28, 'Estante de livros', 6),
+    (29, 'Quadro Branco pequeno', 20), (30, 'Tripé para projetor', 4), (31, 'Caixa organizadora plástica', 60), (32, 'Extensão elétrica 5 tomadas', 40),
+    (33, 'Resma de Papel A4', 200), (34, 'Caneta Azul', 300), (35, 'Caneta Preta', 300), (36, 'Caneta Vermelha', 150),
+    (37, 'Lápis', 500), (38, 'Borracha', 200), (39, 'Apontador', 120), (40, 'Grampeador', 20),
+    (41, 'Caixa de Grampos', 150), (42, 'Cola Bastão', 100), (43, 'Cola Líquida', 80), (44, 'Post-it bloco pequeno', 90),
+    (45, 'Caderno 96 folhas', 180), (46, 'Pasta catálogo', 70), (47, 'Pasta L', 500), (48, 'Envelope pardo', 300),
+    (49, 'Tesoura escolar', 120), (50, 'Régua 30cm', 150), (51, 'Fita adesiva', 100), (52, 'Fita dupla face', 60),
+    (53, 'Marcador de Quadro Branco', 200), (54, 'Datashow Projetor', 4), (55, 'Projetor portátil mini', 2), (56, 'Caixa de Som Amplificada', 3),
+    (57, 'Microfone sem fio', 4), (58, 'Ar-Condicionado 12.000 BTU', 10), (59, 'Ar-Condicionado 18.000 BTU', 4);
+
+    -- Loop principal para gerar os inserts de ITENS e MOVIMENTACOES
+    FOR item_type IN (SELECT * FROM item_data ORDER BY id_nomes_itens)
+    LOOP
+        item_id_nomes_itens := item_type.id_nomes_itens;
+        item_quantity := item_type.quantidade;
+        item_name := item_type.nomes_itens;
+        
+        -- Loop para a quantidade de cada item
+        FOR i IN 1..item_quantity
+        LOOP
+            -- 1. Gerar o número de patrimônio no formato 000001
+            DECLARE
+                patrimonio_text TEXT;
+            BEGIN
+                patrimonio_text := lpad(patrimonio_seq::text, 6, '0');
+
+                -- 2. INSERT na tabela ITENS
+                -- id_status = 1 (DISPONÍVEL)
+                EXECUTE 'INSERT INTO ITENS (id_nomes_itens, numero_patrimonio, id_status) 
+                         VALUES ($1, $2, 1) RETURNING id_itens'
+                INTO id_item_atual
+                USING item_id_nomes_itens, patrimonio_text;
+
+                -- 3. INSERT na tabela MOVIMENTACOES (Registro de Entrada)
+                -- id_status = 1 (DISPONÍVEL)
+                -- id_juncao_usuario_cp = 1 (Usuário TI)
+                -- id_locais = current_locais_id (que corresponde ao id_nomes_itens)
+                EXECUTE 'INSERT INTO MOVIMENTACOES (id_itens, id_status, id_juncao_usuario_cp, data, id_locais)
+                         VALUES ($1, 1, 1, $2, $3)'
+                USING id_item_atual, '2024-10-27 10:00:00'::timestamp without time zone, current_locais_id;
+
+                patrimonio_seq := patrimonio_seq + 1;
+            END;
+        END LOOP;
+        
+        -- Move para o próximo ID de local, que corresponde ao próximo tipo de item
+        current_locais_id := current_locais_id + 1;
+
+    END LOOP;
+    
+    DROP TABLE item_data; -- Limpa a tabela temporária
+END $$;

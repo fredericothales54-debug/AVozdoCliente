@@ -1,0 +1,125 @@
+CREATE DATABASE Projeto_X
+    WITH OWNER = postgres
+         ENCODING = 'UTF8'
+         TEMPLATE = template0;
+
+CREATE TABLE IF NOT EXISTS USUARIOS (
+    id_usuarios SERIAL PRIMARY KEY,
+    nomes_usuarios TEXT NOT NULL,
+    senhas_usuarios TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS CARGOS (
+    id_cargos SERIAL PRIMARY KEY,
+    nomes_cargos TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS NIVEL_PERMISSOES (
+    id_nivel_permissoes SERIAL PRIMARY KEY,
+    nomes_permissoes TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS LOCAIS (
+    id_locais SERIAL PRIMARY KEY,
+    numero_sala TEXT NOT NULL,
+    nome_estrutura TEXT NOT NULL,
+    numero_posicao TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS STATUS (
+    id_status SERIAL PRIMARY KEY,
+    nomes_status TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS CATEGORIAS (
+    id_categorias SERIAL PRIMARY KEY,
+    nomes_categorias TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS NOMES_ITENS (
+    id_nomes_itens SERIAL PRIMARY KEY,
+    nomes_itens TEXT NOT NULL UNIQUE,
+    id_categorias INTEGER NOT NULL,
+
+    FOREIGN KEY (id_categorias) REFERENCES CATEGORIAS(id_categorias)
+);
+
+CREATE TABLE IF NOT EXISTS ITENS (
+    id_itens SERIAL PRIMARY KEY,
+    id_nomes_itens INTEGER NOT NULL,
+    numero_patrimonio TEXT NOT NULL UNIQUE,
+    id_status INTEGER NOT NULL,
+
+    FOREIGN KEY (id_nomes_itens) REFERENCES NOMES_ITENS(id_nomes_itens),
+    FOREIGN KEY (id_status) REFERENCES STATUS(id_status)
+);
+
+CREATE TABLE IF NOT EXISTS JUNCAO_CARGOS_PERMISSOES (
+    id_juncao_cargos_permissoes SERIAL PRIMARY KEY,
+    id_cargos INTEGER NOT NULL,
+    id_nivel_permissoes INTEGER NOT NULL,
+
+    FOREIGN KEY (id_cargos) REFERENCES CARGOS(id_cargos),
+    FOREIGN KEY (id_nivel_permissoes) REFERENCES NIVEL_PERMISSOES(id_nivel_permissoes),
+
+    UNIQUE (id_cargos, id_nivel_permissoes)
+);
+
+CREATE TABLE IF NOT EXISTS JUNCAO_USUARIOS_CP (
+    id_juncao_usuario_cp SERIAL PRIMARY KEY,
+    id_usuarios INTEGER NOT NULL,
+    id_juncao_cargos_permissoes INTEGER NOT NULL,
+
+    FOREIGN KEY (id_usuarios) REFERENCES USUARIOS(id_usuarios),
+    FOREIGN KEY (id_juncao_cargos_permissoes) REFERENCES JUNCAO_CARGOS_PERMISSOES(id_juncao_cargos_permissoes)
+);
+
+CREATE TABLE IF NOT EXISTS MOVIMENTACOES (
+    id_movimentacoes SERIAL PRIMARY KEY,
+    id_itens INTEGER NOT NULL,
+    id_status INTEGER NOT NULL,
+    id_juncao_usuario_cp INTEGER NOT NULL,
+    data TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    id_locais INTEGER NOT NULL,
+
+    FOREIGN KEY (id_itens) REFERENCES ITENS(id_itens),
+    FOREIGN KEY (id_status) REFERENCES STATUS(id_status),
+    FOREIGN KEY (id_juncao_usuario_cp) REFERENCES JUNCAO_USUARIOS_CP(id_juncao_usuario_cp),
+    FOREIGN KEY (id_locais) REFERENCES LOCAIS(id_locais)
+);
+
+
+
+
+
+INSERT INTO CARGOS (nomes_cargos) VALUES
+('AUXILIAR DE BIBLIOTECA'),
+('COORDENADOR ADMINISTRATIVO'),
+('PROFESSOR'),
+('TÉCNICO DE TI');
+
+INSERT INTO NIVEL_PERMISSOES (nomes_permissoes) VALUES
+('TI'),
+('ADMIN'),
+('USER');
+
+INSERT INTO STATUS (nomes_status) VALUES
+('DISPONÍVEL'),
+('EM USO'),
+('EXTRAVIADO');
+
+INSERT INTO CATEGORIAS (nomes_categorias) VALUES
+('Tecnologia e Informática'),
+('Mobiliário e Estrutura'),
+('Material de Escritório (Consumível)'),
+('Audiovisual e Periféricos'),
+('Climatização');
+
+INSERT INTO USUARIOS (nomes_usuarios, senhas_usuarios) VALUES
+('TI', '0000');
+
+INSERT INTO JUNCAO_CARGOS_PERMISSOES (id_cargos, id_nivel_permissoes) VALUES
+(1, 1);
+
+INSERT INTO JUNCAO_USUARIOS_CP (id_usuarios, id_juncao_cargos_permissoes) VALUES
+(1, 1);

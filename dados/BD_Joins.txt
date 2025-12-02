@@ -1,0 +1,39 @@
+SELECT
+    NI.id_nomes_itens,
+    S.id_status,
+    I.id_itens,
+    JUCP.id_juncao_usuario_cp,
+    L.id_locais,
+    C.id_cargos,
+    NP.id_nivel_permissoes,
+    U.id_usuarios,
+    JCP.id_juncao_cargos_permissoes
+FROM
+    MOVIMENTACOES AS M
+INNER JOIN
+    ITENS AS I
+    ON M.id_itens = I.id_itens
+INNER JOIN
+    STATUS AS S
+    ON M.id_status = S.id_status
+INNER JOIN
+    LOCAIS AS L
+    ON M.id_locais = L.id_locais
+INNER JOIN
+    JUNCAO_USUARIOS_CP AS JUCP
+    ON M.id_juncao_usuario_cp = JUCP.id_juncao_usuario_cp
+INNER JOIN
+    NOMES_ITENS AS NI
+    ON I.id_nomes_itens = NI.id_nomes_itens
+INNER JOIN
+    USUARIOS AS U
+    ON JUCP.id_usuarios = U.id_usuarios
+INNER JOIN
+    JUNCAO_CARGOS_PERMISSOES AS JCP
+    ON JUCP.id_juncao_cargos_permissoes = JCP.id_juncao_cargos_permissoes
+INNER JOIN
+    CARGOS AS C
+    ON JCP.id_cargos = C.id_cargos
+INNER JOIN
+    NIVEL_PERMISSOES AS NP
+    ON JCP.id_nivel_permissoes = NP.id_nivel_permissoes;
