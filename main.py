@@ -1,7 +1,7 @@
 import tkinter as tk
 import psycopg2
 import sys
-from model import conexaobanco_model
+from model import *
 from controller import AppController 
 from view import AppView 
 DB_HOST = "localhost"
