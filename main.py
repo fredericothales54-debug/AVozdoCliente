@@ -1,64 +1,43 @@
-import tkinter as tk
-import psycopg2
-import sys
 from model import *
-from controller import AppController 
-from view import AppView 
-DB_HOST = "localhost"
-DB_NAME = "seu_banco_de_dados"
-DB_USER = "seu_usuario"
-DB_PASS = "sua_senha"
-DB_PORT = "5432"
-
+from view import *
+from controller import *
+import tkinter as tk
+import sys
+import psycopg2
+DB_HOST="localhost"
+DB_NAME="goku"
+DB_USER="lucas"
+DB_PASS="1234"
+DB_PORT="5432"
 def main():
-    """Função principal para inicializar e executar a aplicação MVC."""
-    db_conn = None
-    
-  
+    db_conn=True
     try:
-        db_conn = psycopg2.connect(
+        db_conn=psycopg2.connect(
             host=DB_HOST,
             dbname=DB_NAME,
             user=DB_USER,
             password=DB_PASS,
             port=DB_PORT
         )
-        print("✅ Conexão com o PostgreSQL estabelecida com sucesso.")
-        
+        print("Conexão bd deu certo")
     except psycopg2.OperationalError as e:
-        print(f"❌ Erro ao conectar ao banco de dados: {e}")
-        print("Certifique-se de que o PostgreSQL está rodando e as credenciais estão corretas.")
+        print("erro ao conectar ao banco de dados")
         sys.exit(1)
-
-    
-    
-    
-    root = tk.Tk()
-    root.withdraw() 
-    
-    
-    app_controller = AppController(
-        db_model_class=conexaobanco_model, 
-        view_instace=None,                  
-        db_conn=db_conn                    
+    root=tk.Tk()
+    root.withdraw()
+    appcontroler=AppController(
+        db_model_class=conexaobanco_model,
+        view_instace=None,
+        db_conn=db_conn
     )
-    
-   
-   
-    app_view = AppView(
+    app_view= AppView(
         root_window=root,
-        controller=app_controller
+        controller=appcontroler
     )
-    
-   
-    app_controller.view = app_view 
-    
-   
+    appcontroler.view=app_view
     root.mainloop()
-
     if db_conn:
         db_conn.close()
-        print("Conexão com o DB fechada ao sair do aplicativo.")
-
+        print("conexão db fechada")
 if __name__ == "__main__":
     main()
