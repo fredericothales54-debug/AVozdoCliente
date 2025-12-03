@@ -116,10 +116,15 @@ INSERT INTO CATEGORIAS (nomes_categorias) VALUES
 ('Climatização');
 
 INSERT INTO USUARIOS (nomes_usuarios, senhas_usuarios) VALUES
-('TI', '0000');
+('TI', '0000'),
+('ALMOXARIFADO', '0000');
 
 INSERT INTO JUNCAO_CARGOS_PERMISSOES (id_cargos, id_nivel_permissoes) VALUES
-(1, 1);
+(1, 2),
+(2, 2),
+(3, 3),
+(4, 1);
 
 INSERT INTO JUNCAO_USUARIOS_CP (id_usuarios, id_juncao_cargos_permissoes) VALUES
-(1, 1);
+(1, 4),
+(2, 1),
