@@ -4,10 +4,11 @@ ARQUIVO="historico.json"
 class usuario_model:
     """Representa a pessoa que pega o item ."""
     
-    def __init__(self, id_usuario, nome, matricula):
+    def __init__(self, id_usuario, nome, matricula,tipo):
         self.id = id_usuario
         self.nome = nome
         self.matricula = matricula
+        self.tipo = tipo
 class item_model:
     """Classe que representa um filme no sistema de cinema"""
     
@@ -108,7 +109,7 @@ class conexaobanco_model:
             return False
     def autenticar_usuario(self,matricula:str):
         query = """
-            SELECT id_usuario, nome, matricula, senha
+            SELECT id_usuario, nome, matricula, senha,permissao
             FROM USUARIOS 
             WHERE matricula = %s; 
         """
@@ -198,13 +199,31 @@ class conexaobanco_model:
             self.conn.rollback()
             print(f"❌ Erro na transação de empréstimo: {e}")
             return False
+
+    def listar_todas_categorias(self):
+        """Busca todas as categorias do banco de dados e as retorna."""
+        
+        query = "SELECT id_categorias, nome_categoria FROM CATEGORIAS ORDER BY nome_categoria;"
+        
+        try:
+            rows = self._executar_query(query)
+            
+            if rows:
+                return [{"id": row[0], "nome": row[1]} for row in rows]
+            
+            return []
+            
+        except Exception as e:
+            print(f"❌ Erro de query ao listar categorias: {e}")
+            return []
+
     def listar_itens_disponiveis(self):
         query = """
             SELECT
                 i.id_itens,
                 ni.nomes_itens, 
                 i.numero_patrimonio,
-                'N/A', -- Categoria Produto (Placeholder)
+                c.nome_categoria,
                 CONCAT(l.numero_sala, ' - ', l.numero_posicao, ' (', l.nome_estrutura, ')'), 
                 s.nome_status
             FROM
@@ -215,6 +234,8 @@ class conexaobanco_model:
                 STATUS s ON i.id_status = s.id_status
             JOIN
                 LOCAIS l ON i.id_locais = l.id_locais
+            JOIN 
+                CATEGORIAS c ON ni.id_categorias = c.id_categorias 
             WHERE
                 i.id_status = 1; -- Filtra apenas por 'DISPONÍVEL'
         """
@@ -225,42 +246,39 @@ class conexaobanco_model:
             return [item_model.from_db_row(row) for row in rows]
             
         return [] 
-        
-
-
-class historico:
-    def __init__(self):
-        pass
+ARQUIVO = 'historico.json'
+class Historico:
     @staticmethod
     def carregar_dados():
-        dados_iniciais= {
-            "eventos":[],
-            "ultima_atualizacao":None
-           }
         try:
             with open(ARQUIVO, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except FileNotFoundError:
-            return dados_iniciais
-        
-        except json.JSONDecodeError:
-            print ("erro")
-            return dados_iniciais
-           
-    @staticmethod
-    def registrar_historico(tipo_evento:str,detalhes:dict):
-        dados=historico.carregar_dados()
-        novo_registro={
-            "timestamp": datetime.datetime.now().isoformat(),
-            "tipo": tipo_evento,
-            "detalhes": detalhes
-        }
-        dados["eventos"].append(novo_registro)
-        dados["ultima_atualizacao"]=datetime.datetime.now().isoformat()
-        try:
-            with open (ARQUIVO,'w',encoding='utf-8') as f:
-                json.dump(dados,f,indent=4)
-                return True
-        except Exception as e:
-            print("erro",e)
-            return False
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+
+historico = Historico()
+
+def registrar_historico(tipo_evento: str, detalhes: dict):
+    dados = historico.carregar_dados()
+
+   
+    if 'eventos' not in dados:
+        dados['eventos'] = []
+    
+    novo_registro = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "tipo": tipo_evento,
+        "detalhes": detalhes
+    }
+    
+    dados["eventos"].append(novo_registro)
+    
+    dados["ultima_atualizacao"] = datetime.datetime.now().isoformat()
+    
+    try:
+        with open(ARQUIVO, 'w', encoding='utf-8') as f:
+            json.dump(dados, f, indent=4)
+            return True
+    except Exception as e:
+        print(f"Erro ao salvar histórico: {e}")
+        return False

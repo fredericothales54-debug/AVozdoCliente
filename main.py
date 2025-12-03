@@ -6,8 +6,8 @@ import sys
 import psycopg2
 DB_HOST="localhost"
 DB_NAME="goku"
-DB_USER="lucas"
-DB_PASS="1234"
+DB_USER="postgres"
+DB_PASS="88084099"
 DB_PORT="5432"
 def main():
     db_conn=True

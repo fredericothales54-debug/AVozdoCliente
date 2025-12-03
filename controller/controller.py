@@ -18,6 +18,25 @@ class AppController:
         self.historico = historico 
         
         self.running = True
+    def fazer_login(self, matricula: str, senha_digitada: str):
+        """Método de login que a View estava procurando."""
+        dados_usuario = self.db_model.autenticar_usuario(matricula) 
+
+        if dados_usuario is None:
+            return False, "Matrícula não encontrada."
+
+        senha_armazenada = dados_usuario[3]
+
+        if senha_digitada == senha_armazenada: 
+            
+            usuario_logado = usuario_model(dados_usuario[0], dados_usuario[1], dados_usuario[2], dados_usuario[4])
+
+            return True, usuario_logado 
+
+        else:
+            return False, "Senha incorreta."
+    
+   
 
     def iniciar_app(self):
         self.view.mostrar_mensagem("Bem-vindo ao sistema de Inventário!")
