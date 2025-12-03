@@ -5,7 +5,7 @@ import tkinter as tk
 import sys
 import psycopg2
 DB_HOST="localhost"
-DB_NAME="goku"
+DB_NAME="A_Voz_do_Cliente"
 DB_USER="postgres"
 DB_PASS="88084099"
 DB_PORT="5432"

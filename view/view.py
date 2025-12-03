@@ -103,7 +103,7 @@ class AppView:
              self.menu_win.destroy()
         
         self.menu_win = tk.Toplevel(self.root)
-        self.menu_win.title(f"Sistema de Estoque - Logado como: {self.usuario_logado.nome} ({self.usuario_logado.tipo})") # Assumindo que o objeto tem nome e tipo
+        self.menu_win.title(f"Sistema de Estoque - Logado como: {self.usuario_logado.nome}") # Assumindo que o objeto tem nome e tipo
         self.menu_win.geometry("1000x600")
         self.menu_win.protocol("WM_DELETE_WINDOW", self.finalizar_app)
 

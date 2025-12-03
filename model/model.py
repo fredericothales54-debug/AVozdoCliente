@@ -4,11 +4,10 @@ ARQUIVO="historico.json"
 class usuario_model:
     """Representa a pessoa que pega o item ."""
     
-    def __init__(self, id_usuario, nome, matricula,tipo):
-        self.id = id_usuario
-        self.nome = nome
-        self.matricula = matricula
-        self.tipo = tipo
+    def __init__(self,id_usuarios,nomes_usuarios, senhas_usuarios):
+        self.id = id_usuarios
+        self.nome = nomes_usuarios
+        self.senha=senhas_usuarios
 class item_model:
     """Classe que representa um filme no sistema de cinema"""
     
@@ -107,13 +106,13 @@ class conexaobanco_model:
         except Exception as e:
             self.conn.rollback()
             return False
-    def autenticar_usuario(self,matricula:str):
+    def autenticar_usuario(self,usuarios:str):
         query = """
-            SELECT id_usuario, nome, matricula, senha,permissao
+            SELECT id_usuarios, nomes_usuarios,  senhas_usuarios
             FROM USUARIOS 
-            WHERE matricula = %s; 
+            WHERE  nomes_usuarios= %s; 
         """
-        row = self._executar_query(query, (matricula,), fetchone=True)
+        row = self._executar_query(query, (usuarios,), fetchone=True)
         if row:
             return (row)
         return None

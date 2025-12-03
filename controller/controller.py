@@ -25,11 +25,11 @@ class AppController:
         if dados_usuario is None:
             return False, "Matrícula não encontrada."
 
-        senha_armazenada = dados_usuario[3]
+        senha_armazenada = dados_usuario[2]
 
         if senha_digitada == senha_armazenada: 
             
-            usuario_logado = usuario_model(dados_usuario[0], dados_usuario[1], dados_usuario[2], dados_usuario[4])
+            usuario_logado = usuario_model(dados_usuario[0], dados_usuario[1], dados_usuario[2])
 
             return True, usuario_logado 
 
@@ -207,25 +207,3 @@ class inventarioController:
             return {"status": "erro",
                     "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."
                     }, 409
-
-    def fazer_login(self, matricula: str, senha_digitada: str):
-        dados_usuario = self.db_model.autenticar_usuario(matricula)
-
-        if dados_usuario is None:
-            return False, "Matrícula não encontrada."
-
-        senha_armazenada = dados_usuario[3]
-
-        if senha_digitada == senha_armazenada: # Simulação INSEGURA
-            
-            usuario_logado = usuario_model(dados_usuario[0], dados_usuario[1], dados_usuario[2])
-
-            historico.registrar_historico(
-                tipo_evento="LOGIN",
-                detalhes={"matricula": matricula, "nome": usuario_logado.nome}
-            )
-
-            return True, usuario_logado
-
-        else:
-            return False, "Senha incorreta."
