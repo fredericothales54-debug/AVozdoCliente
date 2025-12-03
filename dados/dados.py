@@ -262,3 +262,116 @@ class Dados:
                 C.nomes_categorias, NI.nomes_itens, S.nomes_status;
         """
         return self._db.execute(query, fetch='all')
+    
+    # Realizar Movimentações
+
+    def nomear_item_novo(self, nome_item: str, id_categoria: int) -> int or str or None:
+        """
+        [Criação de Itens com Validação]
+        1. Verifica se o nome do item já existe.
+        2. Se existir, retorna a mensagem "JÁ EXISTE".
+        3. Se não existir, insere o novo nome de item e o ID da categoria.
+
+        Retorna: O id_nomes_itens (int) gerado se for sucesso, a string "JÁ EXISTE" se o nome já existir, 
+                 ou None em caso de outro erro SQL.
+        """
+        # 1. VERIFICAÇÃO DE EXISTÊNCIA
+        check_query = """
+            SELECT id_nomes_itens
+            FROM NOMES_ITENS 
+            WHERE nomes_itens = %s;
+        """
+        item_existente = self._db.execute(check_query, (nome_item,), fetch='one')
+        
+        if item_existente:
+            # 2. Se existir, retorna a mensagem de erro específica
+            print(f"AVISO: O nome do item '{nome_item}' já existe no banco de dados.")
+            return "JÁ EXISTE"
+
+        # 3. INSERÇÃO SE NÃO EXISTE
+        insert_query = """
+            INSERT INTO NOMES_ITENS (nomes_itens, id_categorias)
+            VALUES (%s, %s)
+            RETURNING id_nomes_itens; 
+        """
+        return self._db.execute(insert_query, (nome_item, id_categoria), fetch='insert_returning')
+    
+    def listar_categorias(self) -> List[Dict] or None:
+        """
+        [Busca de Categorias]
+        Busca e retorna todos os IDs e nomes das categorias.
+
+        Retorna: Lista de dicionários com chaves 'id_categorias' e 'nomes_categorias'.
+        O ID é necessário para vincular o novo item à categoria no BD.
+        """
+        query = """
+            SELECT id_categorias, nomes_categorias
+            FROM CATEGORIAS;
+        """
+        return self._db.execute(query, fetch='all')
+    
+    def atribuir_categoria(self, id_nomes_itens: int, id_categorias: int) -> int or str or None:
+        """
+        [Atualização de Categoria de Item]
+        Atualiza o campo id_categorias de um item específico na tabela NOMES_ITENS.
+
+        Parâmetros:
+        - id_nomes_itens (int): O ID do nome do item a ser atualizado.
+        - id_categorias (int): O ID da nova categoria a ser atribuída.
+
+        Retorna: O número de linhas afetadas (int > 0) se for sucesso, 
+                 ou None / string de erro se falhar (ex: FOREIGN_KEY_ERROR).
+        """
+        query = """
+            UPDATE NOMES_ITENS
+            SET id_categorias = %s
+            WHERE id_nomes_itens = %s;
+        """
+        return self._db.execute(query, (id_categorias, id_nomes_itens), fetch='none')
+    
+    def atribuir_patrimonio(self, numero_patrimonio: str, id_nomes_itens: int) -> int or str or None:
+        """
+        [Criação de Item Físico (Patrimônio)]
+        Insere um novo item físico na tabela ITENS com o número de patrimônio e 
+        vinculado a um Nome de Item, definindo o status inicial como 'DISPONÍVEL' (id_status=1).
+        
+        OBS: Pressupõe que o ID 1 na tabela STATUS é 'DISPONÍVEL'.
+
+        Retorna: O id_itens (int) gerado se for sucesso, ou string de erro.
+        """
+        # O status inicial é 1 (DISPONÍVEL), o local inicial é 1 (ESTOQUE)
+        # Note que a coluna id_locais na tabela ITENS não é NOT NULL no seu esquema, mas a id_status é.
+        query = """
+            INSERT INTO ITENS (id_nomes_itens, numero_patrimonio, id_status)
+            VALUES (%s, %s, 1) 
+            RETURNING id_itens; 
+        """
+        return self._db.execute(query, (id_nomes_itens, numero_patrimonio), fetch='insert_returning')
+    
+    def listar_status(self) -> List[Dict] or None:
+        """ 
+        [Listagem de Status]
+        Busca e retorna todos os IDs e nomes de status de itens da tabela STATUS.
+        
+        Retorna: Lista de dicionários com chaves 'id_status' e 'nomes_status'.
+        """
+        query = """
+            SELECT id_status, nomes_status
+            FROM STATUS;
+        """
+        return self._db.execute(query, fetch='all')
+    
+    def atribuir_status(self, id_itens: int, id_status: int) -> int or str or None:
+        """
+        [Atualização de Status de Item Físico]
+        Atualiza o campo id_status de um item específico na tabela ITENS.
+
+        Retorna: O número de linhas afetadas (int > 0) se for sucesso, 
+                 ou None / string de erro se falhar (ex: FOREIGN_KEY_ERROR).
+        """
+        query = """
+            UPDATE ITENS
+            SET id_status = %s
+            WHERE id_itens = %s;
+        """
+        return self._db.execute(query, (id_status, id_itens), fetch='none')
