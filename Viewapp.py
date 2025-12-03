@@ -10,14 +10,15 @@ import sys
 
 sns.set_theme(style="whitegrid")
 
-# ---------- CONFIG ----------
-DATA_DIR = "data"
-USUARIOS_FILE = os.path.join(DATA_DIR, "usuarios.json")
-CATEGORIAS_FILE = os.path.join(DATA_DIR, "categorias.json")
-ITENS_FILE = os.path.join(DATA_DIR, "itens.json")
-HISTORICO_FILE = os.path.join(DATA_DIR, "historico.json")
+# ---------- ARQUIVOS JSON ----------
+USUARIOS_FILE = "usuarios.json"
+CATEGORIAS_FILE = "categorias.json"
+ITENS_FILE = "itens.json"
+HISTORICO_FILE = "historico.json"
 
-# ---------- DADOS PADRÃO ----------
+# -------------------------
+# Dados iniciais (em memória)
+# -------------------------
 _default_usuarios = [
     {"usuario": "admin", "senha": "0000", "tipo": "CORDENADOR"},
     {"usuario": "user", "senha": "1234", "tipo": "PROFESSOR"},
@@ -28,38 +29,98 @@ _default_categorias = {
     "Ambientes": {
         "Auditório": 1,
         "Sala de Inovação / Ideação": 1,
-        "Laboratório Maker": 1
+        "Laboratório Maker": 1,
+        "Laboratório de Informática 1": 1,
+        "Laboratório de Informática 2": 1,
+        "Laboratório de Informática 3": 1,
+        "Laboratório de Informática 4": 1
     },
     "Equipamentos de Tecnologia": {
         "Notebook Core i3": 40,
         "Notebook Core i7": 36,
-        "Mouse USB": 60
+        "Computador Desktop Completo": 20,
+        "Monitor 24 polegadas": 25,
+        "Mouse USB": 60,
+        "Teclado USB": 55,
+        "Headset com Microfone": 35,
+        "Pen Drive 32GB": 40,
+        "Tablet 10\"": 15,
+        "Leitor de código de barras": 10,
+        "Impressora Laser": 6,
+        "Multifuncional": 4,
+        "Scanner": 2
+    },
+    "Infraestrutura e Conectividade": {
+        "Roteador Wi-Fi": 8,
+        "Switch 24 portas": 6,
+        "Patch Cords diversos": 50,
+        "Cabo HDMI 1.8m": 30,
+        "Cabo VGA 1.5m": 15,
+        "Adaptador USB-C → HDMI": 12,
+        "Nobreak 1400VA": 5,
+        "Estabilizador 500VA": 18,
+        "Extensão elétrica 5 tomadas": 40
+    },
+    "Audiovisual e Apresentação": {
+        "Datashow Projetor": 4,
+        "Projetor portátil mini": 2,
+        "Caixa de Som Amplificada": 3,
+        "Microfone sem fio": 4,
+        "Tripé para projetor": 4
+    },
+    "Mobiliário e Estrutura": {
+        "Mesa de Professor": 15,
+        "Mesa de Escritório": 10,
+        "Cadeira Giratória": 25,
+        "Cadeira Escolar": 120,
+        "Armário de Aço 2 portas": 8,
+        "Estante de Livros": 6,
+        "Ar-Condicionado 12.000 BTU": 10,
+        "Ar-Condicionado 18.000 BTU": 4,
+        "Quadro Branco pequeno": 20,
+        "Caixa organizadora plástica": 60,
+        "Câmera de segurança": 12
     },
     "Papelaria e Escritório": {
+        "Resma de Papel A4": 200,
         "Caneta Azul": 300,
+        "Caneta Preta": 300,
+        "Caneta Vermelha": 150,
         "Lápis": 500,
-        "Borracha": 200
+        "Borracha": 200,
+        "Apontador": 120,
+        "Grampeador": 20,
+        "Caixa de Grampos": 150,
+        "Cola Bastão": 200,
+        "Cola Líquida": 80,
+        "Post-it bloco pequeno": 90,
+        "Caderno 96 folhas": 180,
+        "Pasta catálogo": 70,
+        "Pasta L": 500,
+        "Envelope pardo": 300,
+        "Marcador de Quadro Branco": 200,
+        "Tesoura escolar": 120,
+        "Régua 30cm": 150,
+        "Fita adesiva": 100,
+        "Fita dupla face": 60
     }
 }
 
-# ---------- MEMÓRIA ----------
+# memória (serão carregadas do JSON ou geradas inicialmente)
 usuarios = []
 categorias = {}
-itens_exemplares = {}   # chave -> dict exemplar, chave = "NOME | 0001-0001"
+itens_exemplares = {}   # chave -> dict exemplar
 _item_group_counter = defaultdict(int)
 movimentacoes = []
 criacao_exclusao = []
 
-# ---------- UTILITÁRIOS ----------
+# -------------------------
+# Utilitários de data e IO
+# -------------------------
 def agora_str():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def ensure_data_dir():
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
-
 def salvar_json(path, obj):
-    ensure_data_dir()
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
 
@@ -78,18 +139,16 @@ def salvar_todos():
 
 def carregar_todos():
     global usuarios, categorias, itens_exemplares, movimentacoes, criacao_exclusao, _item_group_counter
-    ensure_data_dir()
-    if all(os.path.exists(p) for p in (USUARIOS_FILE, CATEGORIAS_FILE, ITENS_FILE, HISTORICO_FILE)):
+    if os.path.exists(USUARIOS_FILE) and os.path.exists(CATEGORIAS_FILE) and os.path.exists(ITENS_FILE) and os.path.exists(HISTORICO_FILE):
         try:
             usuarios = carregar_json(USUARIOS_FILE)
             categorias = carregar_json(CATEGORIAS_FILE)
             itens_exemplares = carregar_json(ITENS_FILE)
             histor = carregar_json(HISTORICO_FILE)
-            movimentacoes[:] = histor.get("movimentacoes", [])
-            criacao_exclusao[:] = histor.get("criacao_exclusao", [])
-            # recomputar counters
+            movimentacoes = histor.get("movimentacoes", [])
+            criacao_exclusao = histor.get("criacao_exclusao", [])
             _item_group_counter = defaultdict(int)
-            for chave in list(itens_exemplares.keys()):
+            for chave in itens_exemplares.keys():
                 try:
                     nome, patr = chave.split(" | ")
                     group = int(patr.split("-")[0])
@@ -98,8 +157,7 @@ def carregar_todos():
                     pass
             return True
         except Exception as e:
-            messagebox.showwarning("AVISO", f"Falha ao carregar JSON: {e}\nUsando dados padrão.")
-    # fallback: carregar padrões e gerar exemplares
+            messagebox.showwarning("AVISO", f"Falha ao carregar arquivos JSON: {e}\nGerando dados padrão.")
     usuarios = [u.copy() for u in _default_usuarios]
     categorias = {k: v.copy() for k, v in _default_categorias.items()}
     itens_exemplares.clear()
@@ -110,18 +168,15 @@ def carregar_todos():
     salvar_todos()
     return False
 
-# ---------- GERAR EXEMPLARES INICIAIS ----------
+# -------------------------
+# Gerar exemplares (001...N) para cada item nome
+# -------------------------
 def gerar_exemplares_iniciais():
     for categoria, itens in categorias.items():
         for nome, qtd in itens.items():
-            # se qtd não for int (quando categorias armazenam dicts), try convert
-            try:
-                qtd_int = int(qtd)
-            except Exception:
-                continue
             _item_group_counter[nome] += 1
             group_id = _item_group_counter[nome]
-            for i in range(1, qtd_int + 1):
+            for i in range(1, qtd + 1):
                 patrimonio = f"{group_id:04d}-{i:04d}"
                 chave = f"{nome} | {patrimonio}"
                 itens_exemplares[chave] = {
@@ -132,69 +187,25 @@ def gerar_exemplares_iniciais():
                     "em_posse": ""
                 }
 
-# ---------- MOUSE WHEEL BINDINGS (Listbox & Treeview) ----------
-def sys_platform_is_mac():
-    return os.name == "posix" and getattr(sys, "platform", "").startswith("darwin")
-
+# -------------------------
+# Helpers para scroll com mouse wheel (bind local ao widget)
+# -------------------------
 def _bind_mousewheel(widget):
-    """
-    Binds mouse wheel so that when the cursor is over the widget,
-    the mouse wheel scrolls that widget (works for Listbox and Treeview).
-    """
-    def _on_enter(event):
-        if os.name == "nt":
-            widget.bind_all("<MouseWheel>", _on_mousewheel_windows)
-        elif sys_platform_is_mac():
-            widget.bind_all("<MouseWheel>", _on_mousewheel_mac)
-        else:
-            widget.bind_all("<Button-4>", _on_mousewheel_linux_up)
-            widget.bind_all("<Button-5>", _on_mousewheel_linux_down)
+    # Bind wheel events directly on widget (avoids global bind_all)
+    if os.name == "nt":
+        widget.bind("<MouseWheel>", lambda e: widget.yview_scroll(int(-1*(e.delta/120)), "units"))
+    elif sys_platform_is_mac():
+        widget.bind("<MouseWheel>", lambda e: widget.yview_scroll(int(-1*(e.delta)), "units"))
+    else:
+        widget.bind("<Button-4>", lambda e: widget.yview_scroll(-1, "units"))
+        widget.bind("<Button-5>", lambda e: widget.yview_scroll(1, "units"))
 
-    def _on_leave(event):
-        try:
-            if os.name == "nt":
-                widget.unbind_all("<MouseWheel>")
-            elif sys_platform_is_mac():
-                widget.unbind_all("<MouseWheel>")
-            else:
-                widget.unbind_all("<Button-4>")
-                widget.unbind_all("<Button-5>")
-        except Exception:
-            pass
+def sys_platform_is_mac():
+    return os.name == "posix" and getattr(sys, 'platform', '').startswith('darwin')
 
-    def _on_mousewheel_windows(e):
-        # delta is multiples of 120
-        try:
-            widget.yview_scroll(int(-1 * (e.delta / 120)), "units")
-        except Exception:
-            pass
-        return "break"
-
-    def _on_mousewheel_mac(e):
-        try:
-            widget.yview_scroll(int(-1 * e.delta), "units")
-        except Exception:
-            pass
-        return "break"
-
-    def _on_mousewheel_linux_up(e):
-        try:
-            widget.yview_scroll(-1, "units")
-        except Exception:
-            pass
-        return "break"
-
-    def _on_mousewheel_linux_down(e):
-        try:
-            widget.yview_scroll(1, "units")
-        except Exception:
-            pass
-        return "break"
-
-    widget.bind("<Enter>", _on_enter)
-    widget.bind("<Leave>", _on_leave)
-
-# ---------- DECORATOR ----------
+# -------------------------
+# Decorator exige login
+# -------------------------
 def exige_login(func):
     def wrapper(*a, **k):
         if usuario_logado is None:
@@ -203,7 +214,9 @@ def exige_login(func):
         return func(*a, **k)
     return wrapper
 
-# ---------- UI / NEGÓCIO ----------
+# -------------------------
+# Funções de negócio (UI)
+# -------------------------
 usuario_logado = None
 root = None
 login_win = None
@@ -226,13 +239,12 @@ def abrir_menu():
     top = tk.Toplevel(root)
     top.title("SISTEMA DE ESTOQUE")
     top.configure(bg="white")
-    top.geometry("1000x650")
+    top.geometry("920x600")
 
     header = tk.Frame(top, bg="white")
     header.pack(fill="x", pady=8)
     label_user = tk.Label(header, text=f"{usuario_logado['usuario']} ({usuario_logado['tipo']})", fg="blue", bg="white", cursor="hand2")
     label_user.pack(side="right", padx=12)
-
     def on_user_click(e=None):
         resp = messagebox.askyesno("SAIR", "DESEJA SAIR DA CONTA?")
         if resp:
@@ -254,41 +266,36 @@ def abrir_menu():
     ttk.Button(sidebar, text="REQUISIÇÕES", command=lambda: tela_requisicoes(content)).pack(fill="x", pady=6)
     ttk.Button(sidebar, text="RELATÓRIOS", command=lambda: tela_relatorios(content)).pack(fill="x", pady=6)
 
+    # permissões: CORDENADOR/DIRETOR/ACCESSFULL podem criar/excluir itens
     if usuario_logado["tipo"] in ["CORDENADOR", "DIRETOR", "ACCESSFULL"]:
         ttk.Button(sidebar, text="CRIAR / EXCLUIR ITENS", command=lambda: tela_criar_excluir(content)).pack(fill="x", pady=6)
 
-    if usuario_logado["tipo"] == "ACCESSFULL":
+    # GERENCIAR USUÁRIOS apenas para DIRETOR (você confirmou "sim" para permitir criar outros DIRETORES)
+    if usuario_logado["tipo"] == "DIRETOR":
         ttk.Button(sidebar, text="GERENCIAR USUÁRIOS", command=lambda: tela_usuarios(content)).pack(fill="x", pady=6)
 
     ttk.Button(sidebar, text="SAIR DO APP", command=root.destroy).pack(side="bottom", fill="x", pady=10)
 
     tela_categorias(content)
 
-# ---------- Helpers de UI ----------
+# ---------- telas ----------
 def limpar_frame(f):
     for w in f.winfo_children():
         w.destroy()
 
-def upper_if_text(s):
-    try:
-        return str(s).upper()
-    except Exception:
-        return s
-
-# ---------- TELAS ----------
 @exige_login
 def tela_categorias(parent):
     limpar_frame(parent)
     ttk.Label(parent, text="CATEGORIAS", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(2,8))
 
-    # Use a frame with Listbox + scrollbar
-    box_frame = tk.Frame(parent, bg="white")
-    box_frame.pack(fill="both", expand=False)
-    listbox = tk.Listbox(box_frame, height=10)
-    vsb = ttk.Scrollbar(box_frame, orient="vertical", command=listbox.yview)
+    listbox_frame = tk.Frame(parent, bg="white")
+    listbox_frame.pack(fill="both", expand=False)
+    listbox = tk.Listbox(listbox_frame, height=10)
+    listbox.pack(side="left", fill="both", expand=True, pady=4)
+    vsb = ttk.Scrollbar(listbox_frame, orient="vertical", command=listbox.yview)
     listbox.configure(yscrollcommand=vsb.set)
-    listbox.pack(side="left", fill="both", expand=True)
     vsb.pack(side="right", fill="y")
+
     for c in categorias.keys():
         listbox.insert(tk.END, c.upper())
 
@@ -296,7 +303,6 @@ def tela_categorias(parent):
 
     btn_frame = tk.Frame(parent, bg="white")
     btn_frame.pack(fill="x", pady=6)
-
     def abrir_cat():
         sel = listbox.curselection()
         if not sel:
@@ -304,28 +310,29 @@ def tela_categorias(parent):
             return
         cat = listbox.get(sel[0])
         abrir_itens_categoria(parent, cat)
-
     ttk.Button(btn_frame, text="ABRIR", command=abrir_cat).pack(side="left")
 
 def abrir_itens_categoria(parent, categoria):
     limpar_frame(parent)
     ttk.Label(parent, text=f"ITENS — {categoria}", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(2,8))
 
-    cols = ("NOME","PATRIMÔNIO","STATUS","EM_POSSE")
+    # colocar tree + scrollbar dentro de frame para scrollbar maior
     tree_frame = tk.Frame(parent, bg="white")
     tree_frame.pack(expand=True, fill="both", pady=6)
 
+    cols = ("NOME","PATRIMÔNIO","STATUS","EM_POSSE")
     tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
     for c in cols:
         tree.heading(c, text=c)
-        tree.column(c, width=200, anchor="w")
+        tree.column(c, width=160, anchor="w")
+    tree.pack(side="left", expand=True, fill="both")
+
     vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=vsb.set)
-    tree.pack(side="left", expand=True, fill="both")
-    vsb.pack(side="right", fill="y")
+    vsb.pack(side="right", fill="y", padx=(0,4))
     _bind_mousewheel(tree)
 
-    # preencher árvore com itens da categoria (case-insensitive)
+    # preencher
     for chave, ex in itens_exemplares.items():
         if ex["categoria"].upper() == categoria.upper():
             tree.insert("", tk.END, iid=chave, values=(ex["nome"].upper(), ex["patrimonio"], ex["status"].upper(), (ex["em_posse"] or "-").upper()))
@@ -353,7 +360,7 @@ def abrir_itens_categoria(parent, categoria):
             return
         chave = sel[0]
         ex = itens_exemplares[chave]
-        if ex["status"].lower() != "disponível":
+        if ex["status"] != "Disponível":
             messagebox.showwarning("INDISPONÍVEL", "EXEMPLAR NÃO ESTÁ DISPONÍVEL.")
             return
         ex["status"] = "Em uso"
@@ -370,7 +377,7 @@ def abrir_itens_categoria(parent, categoria):
             return
         chave = sel[0]
         ex = itens_exemplares[chave]
-        if ex["status"].lower() != "em uso":
+        if ex["status"] != "Em uso":
             messagebox.showwarning("ERRO", "EXEMPLAR NÃO ESTÁ EMPRESTADO.")
             return
         usuario_posse = ex["em_posse"]
@@ -382,7 +389,6 @@ def abrir_itens_categoria(parent, categoria):
         messagebox.showinfo("OK", f"DEVOLVIDO (ANTERIOR: {usuario_posse}).")
 
     def excluir_exemplar():
-        # permitir para CORDENADOR/DIRETOR/ACCESSFULL
         if usuario_logado["tipo"] not in ["CORDENADOR","DIRETOR","ACCESSFULL"]:
             messagebox.showerror("PERMISSÃO", "APENAS CORDENADOR/DIRETOR/ACCESSFULL PODEM EXCLUIR EXEMPLARES.")
             return
@@ -408,21 +414,23 @@ def tela_requisicoes(parent):
     limpar_frame(parent)
     ttk.Label(parent, text="REQUISIÇÕES (TODOS OS EXEMPLARES)", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(2,8))
 
-    cols = ("NOME","PATRIMÔNIO","STATUS","EM_POSSE")
     tree_frame = tk.Frame(parent, bg="white")
     tree_frame.pack(expand=True, fill="both")
+
+    cols = ("NOME","PATRIMÔNIO","STATUS","EM_POSSE")
     tree = ttk.Treeview(tree_frame, columns=cols, show="headings")
     for c in cols:
         tree.heading(c, text=c)
-        tree.column(c, width=200)
-    vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
-    tree.configure(yscrollcommand=vsb.set)
+        tree.column(c, width=180)
     tree.pack(side="left", expand=True, fill="both")
-    vsb.pack(side="right", fill="y")
-    _bind_mousewheel(tree)
 
     for chave, ex in itens_exemplares.items():
         tree.insert("", tk.END, iid=chave, values=(ex["nome"].upper(), ex["patrimonio"], ex["status"].upper(), (ex["em_posse"] or "-").upper()))
+
+    vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+    tree.configure(yscrollcommand=vsb.set)
+    vsb.pack(side="right", fill="y", padx=(0,4))
+    _bind_mousewheel(tree)
 
     btns = tk.Frame(parent, bg="white")
     btns.pack(fill="x", pady=8)
@@ -434,7 +442,7 @@ def tela_requisicoes(parent):
             return
         chave = sel[0]
         ex = itens_exemplares[chave]
-        if ex["status"].lower() != "disponível":
+        if ex["status"] != "Disponível":
             messagebox.showwarning("INDISPONÍVEL", "EXEMPLAR NÃO ESTÁ DISPONÍVEL.")
             return
         ex["status"]="Em uso"
@@ -451,7 +459,7 @@ def tela_requisicoes(parent):
             return
         chave = sel[0]
         ex = itens_exemplares[chave]
-        if ex["status"].lower()!="em uso":
+        if ex["status"]!="Em uso":
             messagebox.showwarning("ERRO", "EXEMPLAR NÃO ESTÁ EMPRESTADO.")
             return
         ex["status"]="Disponível"
@@ -471,18 +479,20 @@ def tela_relatorios(parent):
 
     btn_frame = tk.Frame(parent, bg="white")
     btn_frame.pack(fill="x", pady=6)
+
     ttk.Button(btn_frame, text="RELATÓRIO DE ITENS (PIZZA)", command=relatorio_itens_pizza).pack(side="left", padx=6)
     ttk.Button(btn_frame, text="MOVIMENTAÇÕES (COUNTPLOT)", command=relatorio_movimentacoes).pack(side="left", padx=6)
     ttk.Button(btn_frame, text="CRIAÇÕES/EXCLUSÕES (COUNTPLOT)", command=relatorio_criacoes).pack(side="left", padx=6)
 
     info = tk.Text(parent, height=10)
     info.pack(expand=True, fill="both", pady=8)
+    info.insert("end", "USE OS BOTÕES ACIMA PARA VISUALIZAR GRÁFICOS.\nRESUMO RÁPIDO:\n")
     total = len(itens_exemplares)
     disp = sum(1 for v in itens_exemplares.values() if v["status"].lower()=="disponível")
     uso = sum(1 for v in itens_exemplares.values() if v["status"].lower()=="em uso")
-    info.insert("end", f"USE OS BOTÕES ACIMA PARA VISUALIZAR GRÁFICOS.\nRESUMO RÁPIDO:\nTOTAL EXEMPLARES: {total}\nDISPONÍVEIS: {disp}\nEM USO: {uso}\nMOVIMENTAÇÕES REGISTRADAS: {len(movimentacoes)}\nREGISTROS DE CRIAÇÃO/EXCLUSÃO: {len(criacao_exclusao)}")
+    info.insert("end", f"TOTAL EXEMPLARES: {total}\nDISPONÍVEIS: {disp}\nEM USO: {uso}\nMOVIMENTAÇÕES REGISTRADAS: {len(movimentacoes)}\nREGISTROS DE CRIAÇÃO/EXCLUSÃO: {len(criacao_exclusao)}")
 
-# ---------- GRÁFICOS ----------
+# GRÁFICOS / RELATÓRIOS
 def relatorio_itens_pizza():
     statuses = [v["status"] for v in itens_exemplares.values()]
     disp = sum(1 for s in statuses if s.lower() == "disponível")
@@ -499,6 +509,7 @@ def relatorio_itens_pizza():
     if not sizes:
         messagebox.showinfo("RELATÓRIO", "SEM ITENS PARA MOSTRAR.")
         return
+
     pal = sns.color_palette("pastel", len(sizes))
     plt.figure(figsize=(6,6))
     plt.pie(sizes, labels=labels, autopct="%1.1f%%", colors=pal, startangle=90, wedgeprops={"edgecolor":"white"})
@@ -530,7 +541,6 @@ def relatorio_criacoes():
     plt.ylabel("CONTAGEM")
     plt.show()
 
-# ---------- CRIAÇÃO / EXCLUSÃO GRUPO / REMOVER N ITENS ----------
 @exige_login
 def tela_criar_excluir(parent):
     limpar_frame(parent)
@@ -540,19 +550,21 @@ def tela_criar_excluir(parent):
     frm.pack(fill="x", pady=6)
     ttk.Button(frm, text="CRIAR NOVO GRUPO DE ITENS", command=criar_grupo_item).pack(side="left", padx=6)
     ttk.Button(frm, text="EXCLUIR GRUPO (TODOS EXEMPLARES)", command=excluir_grupo_item).pack(side="left", padx=6)
-    ttk.Button(frm, text="REMOVER N ITENS DO GRUPO", command=remover_n_itens_grupo).pack(side="left", padx=6)
+    ttk.Button(frm, text="EXCLUIR ITENS (QUANTIDADE)", command=excluir_itens_quantidade).pack(side="left", padx=6)
 
-    cols = ("NOME","PATRIMÔNIO","CATEGORIA","STATUS")
     tree_frame = tk.Frame(parent, bg="white")
     tree_frame.pack(expand=True, fill="both", pady=8)
+
+    cols = ("NOME","PATRIMÔNIO","CATEGORIA","STATUS")
     tree = ttk.Treeview(tree_frame, columns=cols, show="headings")
     for c in cols:
         tree.heading(c, text=c)
         tree.column(c, width=180)
+    tree.pack(side="left", expand=True, fill="both")
+
     vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=vsb.set)
-    tree.pack(side="left", expand=True, fill="both")
-    vsb.pack(side="right", fill="y")
+    vsb.pack(side="right", fill="y", padx=(0,4))
     _bind_mousewheel(tree)
 
     for chave, ex in itens_exemplares.items():
@@ -574,84 +586,92 @@ def criar_grupo_item():
         return
 
     if cat not in categorias:
-        # adiciona categoria com contador zero (usuário pode preencher depois)
         categorias[cat] = {}
     _item_group_counter[nome] += 1
     group_id = _item_group_counter[nome]
-    created = 0
     for i in range(1, qtd+1):
         patrimonio = f"{group_id:04d}-{i:04d}"
         chave = f"{nome} | {patrimonio}"
         itens_exemplares[chave] = {"nome":nome,"patrimonio":patrimonio,"categoria":cat,"status":"Disponível","em_posse":""}
-        created += 1
     criacao_exclusao.append({"acao":"CRIACAO","nome":nome,"usuario":usuario_logado["usuario"],"ts":agora_str()})
     salvar_todos()
-    messagebox.showinfo("OK", f"{created} EXEMPLARES DE '{nome}' CRIADOS.")
+    messagebox.showinfo("OK", f"{qtd} EXEMPLARES DE '{nome}' CRIADOS.")
 
 def excluir_grupo_item():
-    # PERMISSÃO: apenas DIRETOR
+    # EXCLUSÃO DE GRUPO APENAS PARA DIRETOR (EXATO)
     if usuario_logado["tipo"] != "DIRETOR":
         messagebox.showerror("PERMISSÃO", "APENAS DIRETOR PODE EXCLUIR GRUPOS.")
         return
     nome = simpledialog.askstring("EXCLUIR GRUPO", "NOME DO ITEM (GRUPO) PARA EXCLUIR TOTALMENTE:")
     if not nome:
         return
-    removidos = [k for k,v in itens_exemplares.items() if v["nome"].lower() == nome.lower()]
+    removidos = [k for k,v in list(itens_exemplares.items()) if v["nome"].lower() == nome.lower()]
     if not removidos:
         messagebox.showinfo("INFO", "NENHUM EXEMPLAR ENCONTRADO PARA ESSE NOME.")
         return
-    # confirmar
-    resp = messagebox.askyesno("CONFIRMAR", f"DESEJA REMOVER {len(removidos)} EXEMPLARES DO GRUPO '{nome}'? ESTA AÇÃO NÃO PODE SER DESFEITA.")
-    if not resp:
+    confirm = messagebox.askyesno("CONFIRMAR", f"REMOVER {len(removidos)} EXEMPLARES DO GRUPO '{nome}'? ESTA AÇÃO NÃO PODE SER DESFEITA.")
+    if not confirm:
         return
     for k in removidos:
         itens_exemplares.pop(k, None)
-    criacao_exclusao.append({"acao":"EXCLUSAO_GRUPO","nome":nome,"usuario":usuario_logado["usuario"],"ts":agora_str(), "qtd": len(removidos)})
+    criacao_exclusao.append({"acao":"EXCLUSAO_GRUPO","nome":nome,"usuario":usuario_logado["usuario"],"ts":agora_str()})
     salvar_todos()
     messagebox.showinfo("OK", f"{len(removidos)} EXEMPLARES REMOVIDOS DO GRUPO '{nome}'.")
 
-def remover_n_itens_grupo():
-    # PERMISSÃO: apenas DIRETOR
-    if usuario_logado["tipo"] != "DIRETOR":
-        messagebox.showerror("PERMISSÃO", "APENAS DIRETOR PODE REMOVER ITENS EM MASSA.")
+def excluir_itens_quantidade():
+    # remover N exemplares de um grupo (apenas DIRETOR ou CORDENADOR/ACCESSFULL allowed)
+    if usuario_logado["tipo"] not in ["DIRETOR","CORDENADOR","ACCESSFULL"]:
+        messagebox.showerror("PERMISSÃO", "APENAS DIRETOR/CORDENADOR/ACCESSFULL PODEM REMOVER ITENS.")
         return
-    nome = simpledialog.askstring("REMOVER ITENS", "NOME DO ITEM (GRUPO):")
+    nome = simpledialog.askstring("EXCLUIR ITENS", "NOME DO ITEM (GRUPO) PARA REMOVER EXEMPLARES:")
     if not nome:
         return
-    try:
-        qtd_raw = simpledialog.askstring("QUANTIDADE", "QUANTOS EXEMPLARES REMOVER (NÚMERO):")
-        qtd = int(qtd_raw)
-        if qtd <= 0:
-            raise ValueError
-    except Exception:
-        messagebox.showerror("ERRO", "QUANTIDADE INVÁLIDA.")
-        return
-    # lista exemplares do grupo ordenados por patrimônio decrescente (remove últimos)
-    exemplares = sorted([ (k,v) for k,v in itens_exemplares.items() if v["nome"].lower() == nome.lower()],
-                        key=lambda kv: kv[1]["patrimonio"], reverse=True)
+    # listar exemplares do grupo
+    exemplares = sorted([k for k,v in itens_exemplares.items() if v["nome"].lower() == nome.lower()])
     if not exemplares:
         messagebox.showinfo("INFO", "NENHUM EXEMPLAR ENCONTRADO PARA ESSE NOME.")
         return
-    to_remove = exemplares[:qtd]
-    resp = messagebox.askyesno("CONFIRMAR", f"DESEJA REMOVER {len(to_remove)} EXEMPLARES DO GRUPO '{nome}'?")
-    if not resp:
+    qtd_raw = simpledialog.askstring("QUANTIDADE", f"ENCONTRADOS {len(exemplares)} EXEMPLARES. QUANTOS DESEJA REMOVER?")
+    try:
+        qtd = int(qtd_raw)
+    except Exception:
+        messagebox.showerror("ERRO", "QUANTIDADE INVÁLIDA.")
         return
-    for k,v in to_remove:
+    if qtd <= 0:
+        messagebox.showinfo("INFO", "NENHUMA REMOÇÃO REALIZADA.")
+        return
+    qtd = min(qtd, len(exemplares))
+    confirm = messagebox.askyesno("CONFIRMAR", f"REMOVER {qtd} EXEMPLARES DO GRUPO '{nome}'?")
+    if not confirm:
+        return
+    # remove os últimos exemplares (ou primeiros) — escolhi remover os últimos para manter menores patrimonios
+    to_remove = exemplares[-qtd:]
+    for k in to_remove:
         itens_exemplares.pop(k, None)
-    criacao_exclusao.append({"acao":"REMOVER_N","nome":nome,"usuario":usuario_logado["usuario"],"ts":agora_str(), "qtd": len(to_remove)})
+    criacao_exclusao.append({"acao":"EXCLUSAO_PARCIAL","nome":nome,"usuario":usuario_logado["usuario"],"quantidade":qtd,"ts":agora_str()})
     salvar_todos()
-    messagebox.showinfo("OK", f"{len(to_remove)} EXEMPLARES REMOVIDOS DO GRUPO '{nome}'.")
+    messagebox.showinfo("OK", f"{qtd} EXEMPLARES REMOVIDOS DO GRUPO '{nome}'.")
 
-# ---------- USUÁRIOS ----------
 @exige_login
 def tela_usuarios(parent):
     limpar_frame(parent)
     ttk.Label(parent, text="GERENCIAR USUÁRIOS (ACESSO: DIRETOR)", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(2,8))
 
-    listbox = tk.Listbox(parent)
-    listbox.pack(fill="x", pady=6)
-    for u in usuarios:
-        listbox.insert(tk.END, f"{u['usuario']} ({u['tipo']})")
+    list_frame = tk.Frame(parent, bg="white")
+    list_frame.pack(fill="both", expand=False)
+    listbox = tk.Listbox(list_frame, height=8)
+    listbox.pack(side="left", fill="both", expand=True, pady=6)
+    vsb = ttk.Scrollbar(list_frame, orient="vertical", command=listbox.yview)
+    listbox.configure(yscrollcommand=vsb.set)
+    vsb.pack(side="right", fill="y")
+    _bind_mousewheel(listbox)
+
+    def refresh_list():
+        listbox.delete(0, tk.END)
+        for u in usuarios:
+            listbox.insert(tk.END, f"{u['usuario']} ({u['tipo']})")
+
+    refresh_list()
 
     frm = tk.Frame(parent, bg="white")
     frm.pack(fill="x", pady=6)
@@ -660,16 +680,19 @@ def tela_usuarios(parent):
             messagebox.showerror("PERMISSÃO", "APENAS DIRETOR PODE CRIAR USUÁRIOS.")
             return
         nome = simpledialog.askstring("USUÁRIO", "NOME DO USUÁRIO:")
+        if not nome: return
         senha = simpledialog.askstring("SENHA", "SENHA:")
+        if senha is None: return
         tipo = simpledialog.askstring("TIPO", "PROFESSOR / CORDENADOR / DIRETOR / ACCESSFULL:")
-        if not nome or not senha or not tipo:
-            messagebox.showerror("ERRO", "DADOS INCOMPLETOS.")
+        if not tipo:
+            messagebox.showerror("ERRO", "TIPO INVÁLIDO.")
             return
         usuarios.append({"usuario":nome,"senha":senha,"tipo":tipo})
         criacao_exclusao.append({"acao":"CRIACAO_USUARIO","nome":nome,"usuario":usuario_logado["usuario"],"ts":agora_str()})
         salvar_todos()
         messagebox.showinfo("OK","USUÁRIO CRIADO.")
-        tela_usuarios(parent)
+        refresh_list()
+
     def excluir_u():
         if usuario_logado["tipo"] != "DIRETOR":
             messagebox.showerror("PERMISSÃO", "APENAS DIRETOR PODE EXCLUIR USUÁRIOS.")
@@ -683,20 +706,28 @@ def tela_usuarios(parent):
         if nome == usuario_logado["usuario"]:
             messagebox.showerror("ERRO","VOCÊ NÃO PODE EXCLUIR SUA PRÓPRIA CONTA ENQUANTO ESTIVER LOGADO.")
             return
-        for u in usuarios:
+        # impedir excluir outro DIRETOR sem confirmação
+        for u in list(usuarios):
             if u["usuario"] == nome:
+                if u["tipo"] == "DIRETOR":
+                    # confirmar exclusão de DIRETOR
+                    conf = messagebox.askyesno("CONFIRMAR", "O USUÁRIO É DIRETOR. TEM CERTEZA QUE DESEJA EXCLUIR?")
+                    if not conf:
+                        return
                 usuarios.remove(u)
                 criacao_exclusao.append({"acao":"EXCLUSAO_USUARIO","nome":nome,"usuario":usuario_logado["usuario"],"ts":agora_str()})
                 salvar_todos()
                 messagebox.showinfo("OK","USUÁRIO EXCLUÍDO.")
-                tela_usuarios(parent)
+                refresh_list()
                 return
         messagebox.showerror("ERRO","USUÁRIO NÃO ENCONTRADO.")
 
     ttk.Button(frm, text="CRIAR USUÁRIO", command=criar_u).pack(side="left", padx=6)
     ttk.Button(frm, text="EXCLUIR USUÁRIO", command=excluir_u).pack(side="left", padx=6)
 
-# ---------- INÍCIO / LOGIN ----------
+# -------------------------
+# Tela de Login (root)
+# -------------------------
 def iniciar_app():
     global root, login_win, entry_user, entry_pass
     carregar_todos()
