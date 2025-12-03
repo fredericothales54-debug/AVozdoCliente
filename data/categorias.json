@@ -1,0 +1,18 @@
+{
+  "Ambientes": {
+    "Auditório": 1,
+    "Sala de Inovação / Ideação": 1,
+    "Laboratório Maker": 1
+  },
+  "Equipamentos de Tecnologia": {
+    "Notebook Core i3": 40,
+    "Notebook Core i7": 36,
+    "Mouse USB": 60
+  },
+  "Papelaria e Escritório": {
+    "Caneta Azul": 300,
+    "Lápis": 500,
+    "Borracha": 200
+  },
+  "EQUIPAMENTOS DE SEGURANÇA": {}
+}

@@ -1,0 +1,75 @@
+{
+  "movimentacoes": [
+    {
+      "tipo": "SAIDA",
+      "patrimonio": "0001-0007",
+      "usuario": "root",
+      "ts": "2025-12-02 21:11:13",
+      "nome": "Notebook Core i3"
+    },
+    {
+      "tipo": "SAIDA",
+      "patrimonio": "0001-0010",
+      "usuario": "root",
+      "ts": "2025-12-02 21:11:18",
+      "nome": "Notebook Core i3"
+    },
+    {
+      "tipo": "SAIDA",
+      "patrimonio": "0001-0009",
+      "usuario": "root",
+      "ts": "2025-12-02 21:11:22",
+      "nome": "Notebook Core i3"
+    },
+    {
+      "tipo": "ENTRADA",
+      "patrimonio": "0001-0010",
+      "usuario": "root",
+      "ts": "2025-12-02 21:11:33",
+      "nome": "Notebook Core i3"
+    },
+    {
+      "tipo": "ENTRADA",
+      "patrimonio": "0001-0009",
+      "usuario": "root",
+      "ts": "2025-12-02 21:11:38",
+      "nome": "Notebook Core i3"
+    },
+    {
+      "tipo": "ENTRADA",
+      "patrimonio": "0001-0007",
+      "usuario": "root",
+      "ts": "2025-12-02 21:11:46",
+      "nome": "Notebook Core i3"
+    }
+  ],
+  "criacao_exclusao": [
+    {
+      "acao": "CRIACAO",
+      "nome": "MEGAFONE",
+      "usuario": "root",
+      "ts": "2025-12-02 21:09:30"
+    },
+    {
+      "acao": "EXCLUSAO_GRUPO",
+      "nome": "MEGAFONE",
+      "usuario": "root",
+      "ts": "2025-12-02 21:09:52",
+      "qtd": 14
+    },
+    {
+      "acao": "REMOVER_N",
+      "nome": "BORRACHA",
+      "usuario": "root",
+      "ts": "2025-12-02 21:10:29",
+      "qtd": 20
+    },
+    {
+      "acao": "REMOVER_N",
+      "nome": "BORRACHA",
+      "usuario": "root",
+      "ts": "2025-12-02 21:10:52",
+      "qtd": 20
+    }
+  ]
+}

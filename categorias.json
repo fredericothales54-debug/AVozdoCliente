@@ -1,0 +1,81 @@
+{
+  "Ambientes": {
+    "Auditório": 1,
+    "Sala de Inovação / Ideação": 1,
+    "Laboratório Maker": 1,
+    "Laboratório de Informática 1": 1,
+    "Laboratório de Informática 2": 1,
+    "Laboratório de Informática 3": 1,
+    "Laboratório de Informática 4": 1
+  },
+  "Equipamentos de Tecnologia": {
+    "Notebook Core i3": 40,
+    "Notebook Core i7": 36,
+    "Computador Desktop Completo": 20,
+    "Monitor 24 polegadas": 25,
+    "Mouse USB": 60,
+    "Teclado USB": 55,
+    "Headset com Microfone": 35,
+    "Pen Drive 32GB": 40,
+    "Tablet 10\"": 15,
+    "Leitor de código de barras": 10,
+    "Impressora Laser": 6,
+    "Multifuncional": 4,
+    "Scanner": 2
+  },
+  "Infraestrutura e Conectividade": {
+    "Roteador Wi-Fi": 8,
+    "Switch 24 portas": 6,
+    "Patch Cords diversos": 50,
+    "Cabo HDMI 1.8m": 30,
+    "Cabo VGA 1.5m": 15,
+    "Adaptador USB-C → HDMI": 12,
+    "Nobreak 1400VA": 5,
+    "Estabilizador 500VA": 18,
+    "Extensão elétrica 5 tomadas": 40
+  },
+  "Audiovisual e Apresentação": {
+    "Datashow Projetor": 4,
+    "Projetor portátil mini": 2,
+    "Caixa de Som Amplificada": 3,
+    "Microfone sem fio": 4,
+    "Tripé para projetor": 4
+  },
+  "Mobiliário e Estrutura": {
+    "Mesa de Professor": 15,
+    "Mesa de Escritório": 10,
+    "Cadeira Giratória": 25,
+    "Cadeira Escolar": 120,
+    "Armário de Aço 2 portas": 8,
+    "Estante de Livros": 6,
+    "Ar-Condicionado 12.000 BTU": 10,
+    "Ar-Condicionado 18.000 BTU": 4,
+    "Quadro Branco pequeno": 20,
+    "Caixa organizadora plástica": 60,
+    "Câmera de segurança": 12
+  },
+  "Papelaria e Escritório": {
+    "Resma de Papel A4": 200,
+    "Caneta Azul": 300,
+    "Caneta Preta": 300,
+    "Caneta Vermelha": 150,
+    "Lápis": 500,
+    "Borracha": 200,
+    "Apontador": 120,
+    "Grampeador": 20,
+    "Caixa de Grampos": 150,
+    "Cola Bastão": 200,
+    "Cola Líquida": 80,
+    "Post-it bloco pequeno": 90,
+    "Caderno 96 folhas": 180,
+    "Pasta catálogo": 70,
+    "Pasta L": 500,
+    "Envelope pardo": 300,
+    "Marcador de Quadro Branco": 200,
+    "Tesoura escolar": 120,
+    "Régua 30cm": 150,
+    "Fita adesiva": 100,
+    "Fita dupla face": 60
+  },
+  "CORPO": {}
+}

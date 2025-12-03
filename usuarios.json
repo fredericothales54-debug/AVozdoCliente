@@ -1,0 +1,17 @@
+[
+  {
+    "usuario": "admin",
+    "senha": "0000",
+    "tipo": "CORDENADOR"
+  },
+  {
+    "usuario": "user",
+    "senha": "1234",
+    "tipo": "PROFESSOR"
+  },
+  {
+    "usuario": "root",
+    "senha": "9999",
+    "tipo": "DIRETOR"
+  }
+]

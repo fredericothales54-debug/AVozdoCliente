@@ -1,0 +1,23 @@
+{
+  "movimentacoes": [],
+  "criacao_exclusao": [
+    {
+      "acao": "CRIACAO",
+      "nome": "BCT",
+      "usuario": "root",
+      "ts": "2025-12-02 20:17:27"
+    },
+    {
+      "acao": "CRIACAO",
+      "nome": "ORELHAS",
+      "usuario": "root",
+      "ts": "2025-12-02 20:19:23"
+    },
+    {
+      "acao": "EXCLUSAO",
+      "nome": "ORELHAS",
+      "usuario": "root",
+      "ts": "2025-12-02 20:19:47"
+    }
+  ]
+}
