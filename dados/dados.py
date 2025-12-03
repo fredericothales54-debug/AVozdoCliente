@@ -1,0 +1,163 @@
+import os
+import psycopg2
+from psycopg2 import extras
+from typing import List, Dict, Tuple, Any
+
+
+# Objeto que faz a conexão com o BD
+
+
+class DatabaseConnector:
+    """ Gerencia a conexão e a execução de consultas no PostgreSQL. """
+    def __init__(self):
+        self.DB_NAME = os.environ.get("DB_NAME", "A_Voz_do_Cliente") 
+        self.DB_USER = os.environ.get("DB_USER", "postgres") 
+        self.DB_PASS = os.environ.get("DB_PASS", "sua_senha_secreta") # Senha
+        self.DB_HOST = os.environ.get("DB_HOST", "localhost")
+        self.DB_PORT = os.environ.get("DB_PORT", "5432")
+
+        self._conn = None
+        self._cursor = None
+        self.connect()
+
+    def connect(self):
+        """ Estabelece a conexão com o PostgreSQL. """
+        try:
+            self._conn = psycopg2.connect(
+                dbname=self.DB_NAME,
+                user=self.DB_USER,
+                password=self.DB_PASS,
+                host=self.DB_HOST,
+                port=self.DB_PORT
+            )
+            self._cursor = self._conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            print("INFO: Conexão com o PostgreSQL estabelecida com sucesso!")
+        except psycopg2.Error as e:
+            print(f"ERRO: Não foi possível conectar ao banco de dados '{self.DB_NAME}'.")
+            print(f"Detalhes do erro: {e}")
+            self._conn = None 
+
+    def close(self):
+        """ Fecha a conexão com o banco de dados. """
+        if self._conn:
+            self._conn.close()
+            print("INFO: Conexão com o banco de dados fechada.")
+
+    def execute(self, query: str, params: Tuple[Any, ...] = None, fetch: str = 'all') -> List[Dict] or Dict or int or None:
+        """ 
+        Executa uma consulta, manipulando transações e tratando erros. 
+        'fetch' pode ser 'all', 'one', 'insert_returning' ou 'none' (para escrita sem retorno).
+        """
+        if not self._conn:
+            return None
+
+        try:
+            self._cursor.execute(query, params)
+            
+            # --- Leitura (SELECT) ---
+            if fetch == 'one':
+                row = self._cursor.fetchone()
+                return dict(row) if row else None
+            elif fetch == 'all':
+                return [dict(row) for row in self._cursor.fetchall()]
+            
+            # --- Escrita (INSERT/UPDATE/DELETE) ---
+            self._conn.commit()
+            
+            # Verifica se é um INSERT que precisa retornar o ID
+            if fetch == 'insert_returning':
+                row = self._cursor.fetchone()
+                return row[0] if row else None
+                
+            return True # Sucesso na escrita (fetch='none' implícito)
+
+        except psycopg2.Error as e:
+            self._conn.rollback()
+            print(f"ERRO SQL: Falha na execução da query. {e}")
+            return None
+        except Exception as e:
+            print(f"ERRO GERAL: Ocorreu um erro inesperado: {e}")
+            return None
+
+
+# Objeto que faz as consultas e inserções no BD
+
+
+class Dados:
+    """
+    O objeto de acesso a dados (DAL) chamado pelo Model.py.
+    TODOS os métodos aqui encapsulam a lógica de consulta/escrita SQL.
+    """
+    def __init__(self):
+        self._db = DatabaseConnector()
+        
+    # Criação de Usuários
+    
+    def criar_usuario_e_senha(self, nome_usuario: str, senha_usuario: str) -> int or None:
+        """
+        [Criação de Usuário]
+        Insere um novo usuário (nome e senha) na tabela USUARIOS.
+        Retorna o id_usuarios gerado pelo banco.
+        """
+        query = """
+            INSERT INTO USUARIOS (nomes_usuarios, senhas_usuarios)
+            VALUES (%s, %s)
+            RETURNING id_usuarios; 
+        """
+        return self._db.execute(query, (nome_usuario, senha_usuario), fetch='insert_returning')
+    
+    def listar_cargos(self) -> List[Dict] or None:
+        """
+        [Listagem de Cargos]
+        Busca e retorna todos os nomes de cargos da coluna 'nomes_cargos' 
+        da tabela CARGOS.
+        Retorna uma lista de dicionários.
+        """
+        query = """
+            SELECT nomes_cargos
+            FROM CARGOS;
+        """
+        return self._db.execute(query, fetch='all')
+    
+    def atribuir_cargo_ao_usuario(self, id_usuario: int, id_nivel_permissoes_ou_cargo: int) -> int or None:
+        """
+        [Atribuição de Cargo/Permissão]
+        Cria o vínculo entre um usuário e seu nível de permissão/cargo
+        na tabela JUNCAO_USUARIO_CP.
+        
+        id_nivel_permissoes_ou_cargo (nome ajustado para clareza) é o ID do cargo 
+        ou nível de permissão que está sendo associado ao usuário.
+        
+        Retorna o id_juncao_usuario_cp gerado pelo banco.
+        """
+        query = """
+            INSERT INTO JUNCAO_USUARIO_CP (id_usuarios, id_nivel_permissoes)
+            VALUES (%s, %s)
+            RETURNING id_juncao_usuario_cp; 
+        """
+        return self._db.execute(query, (id_usuario, id_nivel_permissoes_ou_cargo), fetch='insert_returning')
+    
+    
+    def mostrar_usuario_criado(self, id_usuario: int) -> Dict or None:
+        """
+        [Busca de Usuário Completa]
+        Busca nome, senha e o nome do cargo/nível de permissão de um usuário
+        usando junções entre USUARIOS, JUNCAO_USUARIO_CP e NIVEL_PERMISSOES.
+        
+        Retorna um dicionário com todos os detalhes do usuário.
+        """
+        query = """
+            SELECT
+                u.nomes_usuarios,
+                u.senhas_usuarios,
+                np.nomes_permissoes AS nome_cargo_ou_permissao
+            FROM
+                USUARIOS u
+            LEFT JOIN 
+                JUNCAO_USUARIO_CP jucp ON u.id_usuarios = jucp.id_usuarios
+            LEFT JOIN 
+                NIVEL_PERMISSOES np ON jucp.id_nivel_permissoes = np.id_nivel_permissoes
+            WHERE
+                u.id_usuarios = %s;
+        """
+        return self._db.execute(query, (id_usuario,), fetch='one')
