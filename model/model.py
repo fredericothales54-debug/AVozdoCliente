@@ -202,7 +202,7 @@ class conexaobanco_model:
     def listar_todas_categorias(self):
         """Busca todas as categorias do banco de dados e as retorna."""
         
-        query = "SELECT id_categorias, nome_categoria FROM CATEGORIAS ORDER BY nome_categoria;"
+        query = "SELECT id_categorias, nomes_categorias FROM CATEGORIAS ORDER BY nomes_categorias;"
         
         try:
             rows = self._executar_query(query)

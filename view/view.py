@@ -123,7 +123,7 @@ class AppView:
         ttk.Button(sidebar, text="Relatórios", command=lambda: self.tela_relatorios(content)).pack(fill="x", pady=6)
         ttk.Button(sidebar, text="Movimentações", command=lambda: self.tela_movimentacoes(content)).pack(fill="x", pady=6)
         
-        if self.usuario_logado.tipo in ("ADMIN", "ACCESSFULL"):
+        if self.usuario_logado.nome in ("TI"):
             ttk.Separator(sidebar, orient="horizontal").pack(fill="x", pady=10)
             ttk.Button(sidebar, text="Gerenciar Usuários", command=lambda: self.tela_usuarios(content)).pack(fill="x", pady=6)
             ttk.Button(sidebar, text="Adicionar Novo Item", command=lambda: self.tela_cadastro_item(content)).pack(fill="x", pady=6)
