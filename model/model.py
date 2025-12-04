@@ -2,20 +2,15 @@ import json
 import datetime
 ARQUIVO="historico.json"
 class usuario_model:
-    """Representa a pessoa que pega o item ."""
     
     def __init__(self,id_usuarios,nomes_usuarios, senhas_usuarios):
         self.id = id_usuarios
         self.nome = nomes_usuarios
         self.senha=senhas_usuarios
 class item_model:
-    """Classe que representa um filme no sistema de cinema"""
     
     def __init__(self, id_produto, nome_produto, numero_patrimonio, categoria_produto, localizacao_produto,status_produto ):
-        """
-        Inicializa um objeto Filme.
-        Note que agora recebe 'sala_nome' diretamente da consulta SQL (JOIN).
-        """
+       
         self.id = id_produto
         self.nome = nome_produto
         self.patrimonio = numero_patrimonio
@@ -24,7 +19,6 @@ class item_model:
         self.status = status_produto
     @classmethod
     def from_db_row(cls, row):
-        """Cria um objeto Filme a partir de uma tupla do banco de dados"""
         return cls(
             id_produto=row[0],
             nome_produto=row[1],
@@ -44,10 +38,8 @@ class movimentacaomodel:
      
 class conexaobanco_model:
     def __init__(self,conn):
-        """Recebe uma conexão com o banco de dados."""
         self.conn = conn
     def _executar_query(self, query, params=None, fetchone=False,commit=False):
-        """Função auxiliar para executar consultas."""
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query, params)
@@ -200,7 +192,6 @@ class conexaobanco_model:
             return False
 
     def listar_todas_categorias(self):
-        """Busca todas as categorias do banco de dados e as retorna."""
         
         query = "SELECT id_categorias, nomes_categorias FROM CATEGORIAS ORDER BY nomes_categorias;"
         
@@ -244,7 +235,46 @@ class conexaobanco_model:
         if rows:
             return [item_model.from_db_row(row) for row in rows]
             
-        return [] 
+        return []
+    def listar_exemplares_por_categoria_db(self, nome_categoria: str):
+        query = """
+            SELECT
+                i.id_itens,
+                ni.nomes_itens, 
+                i.numero_patrimonio,
+                c.nomes_categorias, 
+                CONCAT(l.numero_sala, ' - ', l.numero_posicao), 
+                s.nomes_status,
+                COALESCE(u.nomes_usuarios, 'N/A') AS em_posse_por -- Nome do usuário em posse
+            FROM
+                ITENS i
+            JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO
+            JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
+            JOIN STATUS s ON i.id_status = s.id_status
+            JOIN LOCAIS l ON i.id_locais = l.id_locais -- Assumindo id_locais em ITENS
+            -- Buscar o último status de movimentação: Status 2 é 'EM USO'
+            LEFT JOIN MOVIMENTACOES m ON i.id_itens = m.id_itens AND m.id_status = 2 
+            -- Busca o usuário em posse através das tabelas de junção (DDL)
+            LEFT JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
+            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios
+            WHERE
+                c.nomes_categorias = %s
+            ORDER BY
+                i.numero_patrimonio;
+        """
+        rows = self._executar_query(query, (nome_categoria,))
+        
+        if rows:
+            return [{
+                "id": row[0],
+                "nome": row[1],
+                "patrimonio": row[2],
+                "categoria": row[3],
+                "localizacao": row[4],
+                "status": row[5],
+                "em_posse": row[6] 
+            } for row in rows]
+        return []
 ARQUIVO = 'historico.json'
 class Historico:
     @staticmethod

@@ -19,7 +19,6 @@ class AppController:
         
         self.running = True
     def fazer_login(self, matricula: str, senha_digitada: str):
-        """Método de login que a View estava procurando."""
         dados_usuario = self.db_model.autenticar_usuario(matricula) 
 
         if dados_usuario is None:
@@ -150,26 +149,7 @@ class inventarioController:
         if db_conn is None:
             raise ValueError("Conexão com o banco de dados não pode ser nula.")
         self.db_conn = db_conn
-        # Inicializa o Model de persistência
         self.db_model = conexaobanco_model(self.db_conn)
-        
-    def autenticar_usuario_controller(self, matricula: str, senha_digitada: str):
-        usuario_row = self.db_model.autenticar_usuario(matricula)
-
-        if usuario_row:
-            id_usuario, nome, matricula_bd, senha_hash_bd = usuario_row
-
-            if senha_hash_bd == senha_digitada: 
-                usuario = usuario_model(id_usuario, nome, matricula_bd)
-                return usuario
-            else:
-                print("Tentativa de login falhou: Senha incorreta.") 
-                return None
-        else:
-            print("Tentativa de login falhou: Matrícula não encontrada.")
-            return None
-
-    
     def gerenciar_devolucao(self, item_id):
         if not isinstance(item_id, int) or item_id <= 0:
             return {"status": "erro", "mensagem": "ID do item inválido fornecido."}, 400
