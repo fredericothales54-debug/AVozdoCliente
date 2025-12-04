@@ -162,32 +162,45 @@ class AppView:
         self.limpar_frame(parent)
         ttk.Label(parent, text=f"ITENS EM: {categoria.upper()}", font=("Arial", 16, "bold"), background="white").pack(pady=10)
         
-       
-        exemplares = self.controller.listar_exemplares_por_categoria(categoria)
+        # Frame para conter a Treeview e permitir a recarga total
+        tree_frame = tk.Frame(parent, bg="white")
+        tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # --- Função de Carregamento da Treeview ---
+        def carregar_treeview():
+            # Destrói a Treeview antiga e recria
+            for w in tree_frame.winfo_children():
+                w.destroy()
+                
+            # 1. CHAMADA AO CONTROLLER: Pede a lista de exemplares
+            exemplares = self.controller.listar_exemplares_por_categoria(categoria) 
 
-        cols = ("nome", "patrimonio", "status", "em_posse")
-        tree = ttk.Treeview(parent, columns=cols, show="headings", selectmode="browse")
-        
-        tree.heading("nome", text="Nome do Item")
-        tree.heading("patrimonio", text="Patrimônio")
-        tree.heading("status", text="Status")
-        tree.heading("em_posse", text="Em Posse de")
-        
-        tree.column("nome", width=250)
-        tree.column("patrimonio", width=100, anchor="center")
-        tree.column("status", width=100, anchor="center")
-        tree.column("em_posse", width=150)
-        
-        tree.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        for ex in exemplares:
-             
-            chave = ex["patrimonio"] 
-            nome_item = ex.get("nome", "N/A") 
-            tree.insert("", tk.END, iid=chave, values=(nome_item, ex["patrimonio"], ex["status"], ex["em_posse"]))
+            # 2. Criação da Treeview com colunas corretas
+            cols = ("nome", "patrimonio", "status", "em_posse")
+            tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
+            
+            tree.heading("nome", text="Nome do Item")
+            tree.heading("patrimonio", text="Patrimônio")
+            tree.heading("status", text="Status")
+            tree.heading("em_posse", text="Em Posse de")
+            
+            tree.column("nome", width=250)
+            tree.column("patrimonio", width=100, anchor="center")
+            tree.column("status", width=100, anchor="center")
+            tree.column("em_posse", width=150)
+            
+            tree.pack(fill="both", expand=True) 
+            
+            # 3. Preenchimento da Treeview
+            for ex in exemplares:
+                chave = ex["patrimonio"] 
+                nome_item = ex.get("nome", "N/A") 
+                # Certifique-se de que a coluna 'em_posse' está sendo preenchida corretamente
+                tree.insert("", tk.END, iid=chave, values=(nome_item, ex["patrimonio"], ex["status"], ex.get("em_posse", "N/A"))) 
+            
+            return tree 
 
-
-        
+        tree = carregar_treeview()
         def requisitar_exemplar():
             sel = tree.selection()
             if not sel: return

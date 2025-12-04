@@ -34,6 +34,14 @@ class AppController:
 
         else:
             return False, "Senha incorreta."
+    def listar_exemplares_por_categoria(self, nome_categoria: str):
+        try:
+            exemplares_db = self.db_model.listar_exemplares_por_categoria_db(nome_categoria) 
+            return exemplares_db 
+            
+        except Exception as e:
+            print(f"❌ Erro no Controller ao listar exemplares por categoria: {e}")
+            return []
     
    
 
