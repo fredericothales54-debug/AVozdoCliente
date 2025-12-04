@@ -3,8 +3,8 @@
 -- ====================================================================
 CREATE TABLE IF NOT EXISTS USUARIOS (
     id_usuarios SERIAL PRIMARY KEY,
-    nomes_usuarios TEXT NOT NULL,
-    senhas_usuarios TEXT NOT NULL
+    nomes_usuarios TEXT,
+    senhas_usuarios TEXT
 );
 
 CREATE TABLE IF NOT EXISTS CARGOS (
@@ -19,9 +19,9 @@ CREATE TABLE IF NOT EXISTS NIVEL_PERMISSOES (
 
 CREATE TABLE IF NOT EXISTS LOCAIS (
     id_locais SERIAL PRIMARY KEY,
-    numero_sala TEXT NOT NULL,
-    nome_estrutura TEXT NOT NULL,
-    numero_posicao TEXT NOT NULL
+    numero_sala TEXT,
+    nome_estrutura TEXT,
+    numero_posicao TEXT
 );
 
 CREATE TABLE IF NOT EXISTS STATUS (
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS CATEGORIAS (
 
 CREATE TABLE IF NOT EXISTS NOMES_ITENS (
     id_nomes_itens SERIAL PRIMARY KEY,
-    nomes_itens TEXT NOT NULL UNIQUE,
+    nomes_itens TEXT UNIQUE,
     id_categorias INTEGER NOT NULL,
     FOREIGN KEY (id_categorias) REFERENCES CATEGORIAS(id_categorias)
 );
@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS NOMES_ITENS (
 CREATE TABLE IF NOT EXISTS ITENS (
     id_itens SERIAL PRIMARY KEY,
     id_nomes_itens INTEGER NOT NULL,
-    numero_patrimonio TEXT NOT NULL UNIQUE,
-    id_status INTEGER NOT NULL,
+    numero_patrimonio TEXT UNIQUE,
+    id_status INTEGER,
     FOREIGN KEY (id_nomes_itens) REFERENCES NOMES_ITENS(id_nomes_itens),
     FOREIGN KEY (id_status) REFERENCES STATUS(id_status)
 );
@@ -69,11 +69,11 @@ CREATE TABLE IF NOT EXISTS JUNCAO_USUARIOS_CP (
 
 CREATE TABLE IF NOT EXISTS MOVIMENTACOES (
     id_movimentacoes SERIAL PRIMARY KEY,
-    id_itens INTEGER NOT NULL,
-    id_status INTEGER NOT NULL,
-    id_juncao_usuario_cp INTEGER NOT NULL,
-    data TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    id_locais INTEGER NOT NULL,
+    id_itens INTEGER,
+    id_status INTEGER,
+    id_juncao_usuario_cp INTEGER,
+    data TIMESTAMP WITHOUT TIME ZONE,
+    id_locais INTEGER,
     FOREIGN KEY (id_itens) REFERENCES ITENS(id_itens),
     FOREIGN KEY (id_status) REFERENCES STATUS(id_status),
     FOREIGN KEY (id_juncao_usuario_cp) REFERENCES JUNCAO_USUARIOS_CP(id_juncao_usuario_cp),

@@ -93,6 +93,47 @@ class Dados:
         
     # Criação de Usuários
     
+    def verificar_credenciais(self, nome_usuario: str, senha: str) -> Optional[Dict[str, Any]]:
+        """
+        [Verificação de Credenciais para Login]
+        Verifica se existe um usuário com o nome E a senha fornecidos.
+
+        Retorna: 
+        - Um dicionário com os dados essenciais do usuário (ex: ID e nome) se as credenciais forem válidas.
+        - None (simulando "linha de erro") se o usuário/senha não for encontrado.
+        """
+        query = """
+            SELECT 
+                id_usuarios, nomes_usuarios
+            FROM 
+                USUARIOS
+            WHERE 
+                nomes_usuarios = %s AND senhas_usuarios = %s;
+        """
+        # Usamos fetch='one' para buscar apenas uma linha.
+        usuario_encontrado = self._db.execute(query, (nome_usuario, senha), fetch='one')
+        
+        if usuario_encontrado:
+            # Retorna os dados do usuário encontrado.
+            return dict(usuario_encontrado)
+        else:
+            # Retorna None se não houver match.
+            print(f"ERRO: Tentativa de login falhou para o usuário '{nome_usuario}'.")
+            return None
+
+    def listar_cargos(self) -> Optional[List[Dict[str, Any]]]:
+        """
+        [Listagem de Cargos]
+        Busca apenas os nomes e IDs da tabela CARGOS para exibir uma lista limpa.
+        O ID retornado é o id_cargos, que é mapeado para id_juncao_cargos_permissoes 
+        na função de atribuição, usando a suposição de que eles são os mesmos neste contexto.
+        """
+        query = """
+            SELECT id_cargos, nomes_cargos 
+            FROM CARGOS;
+        """
+        return self._db.execute(query, fetch='all')
+
     def criar_usuario_e_senha(self, nome_usuario: str, senha_usuario: str) -> int or None:
         """
         [Criação de Usuário]
@@ -106,26 +147,20 @@ class Dados:
         """
         return self._db.execute(query, (nome_usuario, senha_usuario), fetch='insert_returning')
     
-    def listar_cargos(self) -> List[Dict] or None:
-        """ 
-        [Listagem de Cargos CORRIGIDA]
-        Busca e retorna todos os IDs e nomes de cargos da tabela CARGOS.
-        
-        Retorna: Lista de dicionários com chaves 'id_cargos' e 'nomes_cargos'.
-        """
-        query = """
-            SELECT id_cargos, nomes_cargos
-            FROM CARGOS;
-        """
-        return self._db.execute(query, fetch='all')
-    
     def atribuir_cargo_ao_usuario(self, id_usuario: int, id_juncao_cargos_permissoes: int) -> int or None:
         """
-        [Atribuição de Cargo/Permissão CORRIGIDA]
-        Cria o vínculo entre um usuário e um cargo/permissão específico.
-        
-        Retorna o id_juncao_usuario_cp gerado pelo banco.
+        [Atribuição de Cargo/Permissão]
+        Recebe o ID do Usuário (automático da função de criação) e o ID de Junção de Cargos/Permissões.
+        Insere o id_juncao_cargos_permissoes diretamente na tabela JUNCAO_USUARIOS_CP.
+
+        Parâmetros:
+        - id_usuario: O ID do usuário RECÉM-CRIADO.
+        - id_juncao_cargos_permissoes: O ID da junção (obtido da lista de cargos simples ou de uma etapa de mapeamento anterior).
+
+        Retorna o id_juncao_usuario_cp gerado após a inserção.
         """
+        
+        # O valor recebido (id_juncao_cargos_permissoes) é usado diretamente na query.
         query = """
             INSERT INTO JUNCAO_USUARIOS_CP (id_usuarios, id_juncao_cargos_permissoes)
             VALUES (%s, %s)
@@ -133,10 +168,9 @@ class Dados:
         """
         return self._db.execute(query, (id_usuario, id_juncao_cargos_permissoes), fetch='insert_returning')
     
-    
     def mostrar_usuario_criado(self, id_usuario: int) -> Dict or None:
         """
-        [Busca de Usuário Completa CORRIGIDA]
+        [Busca de Usuário Completa]
         Busca nome, senha, cargo e o nome do nível de permissão associado ao usuário.
 
         Retorna um dicionário com os detalhes do usuário.
