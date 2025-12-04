@@ -1,10 +1,13 @@
 import os
 import psycopg2
 from psycopg2 import extras
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Optional
+from datetime import datetime
 
 
+# ==============================================================================================================================# 
 # Objeto que faz a conexão com o BD
+# ==============================================================================================================================# 
 
 
 class DatabaseConnector:
@@ -80,7 +83,9 @@ class DatabaseConnector:
             return None
 
 
+# ==============================================================================================================================# 
 # Objeto que faz as consultas e inserções no BD
+# ==============================================================================================================================# 
 
 
 class Dados:
@@ -90,8 +95,10 @@ class Dados:
     """
     def __init__(self):
         self._db = DatabaseConnector()
-        
+     
+    # ==============================================================================================================================#   
     # Criação de Usuários
+    # ==============================================================================================================================#
     
     def verificar_credenciais(self, nome_usuario: str, senha: str) -> Optional[Dict[str, Any]]:
         """
@@ -195,8 +202,10 @@ class Dados:
                 u.id_usuarios = %s;
         """
         return self._db.execute(query, (id_usuario,), fetch='one')
-            
+
+    # ==============================================================================================================================#    
     # Geração de Relatórios
+    # ==============================================================================================================================# 
 
     def obter_relatorio_total_inventario(self) -> List[Dict] or None:
         """
@@ -297,115 +306,382 @@ class Dados:
         """
         return self._db.execute(query, fetch='all')
     
-    # Realizar Movimentações
-
-    def nomear_item_novo(self, nome_item: str, id_categoria: int) -> int or str or None:
-        """
-        [Criação de Itens com Validação]
-        1. Verifica se o nome do item já existe.
-        2. Se existir, retorna a mensagem "JÁ EXISTE".
-        3. Se não existir, insere o novo nome de item e o ID da categoria.
-
-        Retorna: O id_nomes_itens (int) gerado se for sucesso, a string "JÁ EXISTE" se o nome já existir, 
-                 ou None em caso de outro erro SQL.
-        """
-        # 1. VERIFICAÇÃO DE EXISTÊNCIA
-        check_query = """
-            SELECT id_nomes_itens
-            FROM NOMES_ITENS 
-            WHERE nomes_itens = %s;
-        """
-        item_existente = self._db.execute(check_query, (nome_item,), fetch='one')
-        
-        if item_existente:
-            # 2. Se existir, retorna a mensagem de erro específica
-            print(f"AVISO: O nome do item '{nome_item}' já existe no banco de dados.")
-            return "JÁ EXISTE"
-
-        # 3. INSERÇÃO SE NÃO EXISTE
-        insert_query = """
-            INSERT INTO NOMES_ITENS (nomes_itens, id_categorias)
-            VALUES (%s, %s)
-            RETURNING id_nomes_itens; 
-        """
-        return self._db.execute(insert_query, (nome_item, id_categoria), fetch='insert_returning')
+    # ==============================================================================================================================# 
+    # Realizar Consultas
+    # ==============================================================================================================================# 
     
     def listar_categorias(self) -> List[Dict] or None:
         """
-        [Busca de Categorias]
-        Busca e retorna todos os IDs e nomes das categorias.
+        [Passo 1: Listar Categorias]
+        Busca todos os nomes e IDs da tabela CATEGORIAS.
+        Usado para a primeira tela de seleção.
 
-        Retorna: Lista de dicionários com chaves 'id_categorias' e 'nomes_categorias'.
-        O ID é necessário para vincular o novo item à categoria no BD.
+        Retorna: Lista de dicionários (id_categorias, nomes_categorias).
         """
         query = """
-            SELECT id_categorias, nomes_categorias
-            FROM CATEGORIAS;
+            SELECT
+                id_categorias, nomes_categorias
+            FROM 
+                CATEGORIAS
+            ORDER BY 
+                nomes_categorias;
         """
         return self._db.execute(query, fetch='all')
-    
-    def atribuir_categoria(self, id_nomes_itens: int, id_categorias: int) -> int or str or None:
+
+    def listar_itens_por_categoria(self, id_categoria: int) -> List[Dict] or None:
         """
-        [Atualização de Categoria de Item]
-        Atualiza o campo id_categorias de um item específico na tabela NOMES_ITENS.
+        [Passo 2: Listar Itens por Categoria com Quantidade]
+        Busca o nome e a contagem total de unidades (ITENS) para uma Categoria específica.
+        
+        Parâmetros:
+        - id_categoria: ID da categoria selecionada pelo usuário.
+
+        Retorna: Lista de dicionários (id_nomes_itens, nomes_itens, total_unidades).
+        """
+        query = """
+            SELECT
+                NI.id_nomes_itens,
+                NI.nomes_itens,
+                COUNT(I.id_itens) AS total_unidades
+            FROM 
+                NOMES_ITENS NI
+            JOIN 
+                ITENS I ON NI.id_nomes_itens = I.id_nomes_itens
+            WHERE 
+                NI.id_categorias = %s
+            GROUP BY 
+                NI.id_nomes_itens, NI.nomes_itens
+            ORDER BY 
+                NI.nomes_itens;
+        """
+        return self._db.execute(query, (id_categoria,), fetch='all')
+
+    def listar_detalhes_itens_por_nome(self, id_nomes_itens: int) -> Optional[List[Dict]]:
+        """
+        [Passo 3: Listar Detalhes de Unidades]
+        Busca todos os detalhes de cada unidade física (ITENS), incluindo status e localização atual.
+        
+        NOTA: A query foi simplificada para usar o campo ITENS.id_locais para a localização atual,
+        o que é mais eficiente do que recalcular a localização a partir do histórico MOVIMENTACOES.
+
+        Retorna: Lista de dicionários (numero_patrimonio, nomes_status, local_atual_completo).
+        """
+        query = """
+            SELECT
+                I.numero_patrimonio,
+                S.nomes_status,
+                -- Usa o estado atual (ITENS.id_locais). Se for NULL (item 'EM USO'),
+                -- exibe uma mensagem indicando que está com um usuário.
+                COALESCE(
+                    L.nome_estrutura || ' - Sala ' || L.numero_sala || ' - Pos. ' || L.numero_posicao,
+                    CASE WHEN S.nomes_status = 'EM USO' THEN 'Com Usuário (Movimentado)' ELSE 'Local Desconhecido' END
+                ) AS local_atual_completo
+            FROM 
+                ITENS I
+            JOIN
+                NOMES_ITENS NI ON I.id_nomes_itens = NI.id_nomes_itens
+            JOIN
+                STATUS S ON I.id_status = S.id_status
+            LEFT JOIN -- LEFT JOIN necessário pois id_locais pode ser NULL
+                LOCAIS L ON I.id_locais = L.id_locais
+            WHERE 
+                I.id_nomes_itens = %s
+            ORDER BY 
+                I.numero_patrimonio;
+        """
+        return self._db.execute(query, (id_nomes_itens,), fetch='all')
+    
+    # ==============================================================================================================================# 
+    # Realizar Movimentações
+    # ==============================================================================================================================#  
+
+    def _obter_id_status(self, nome_status: str) -> Optional[int]:
+        """
+        [Função Auxiliar]
+        Busca o ID de um status pelo seu nome (ex: 'EM USO' ou 'DISPONÍVEL').
+        """
+        query = "SELECT id_status FROM STATUS WHERE nomes_status = %s;"
+        resultado = self._db.execute(query, (nome_status,), fetch='one')
+        return resultado['id_status'] if resultado else None
+
+    def listar_itens_por_categorias_disponivel(self, id_categoria: int) -> List[Dict] or None:
+        """
+        [Passo 1] Lista todos os Nomes de Itens (agrupados) de uma categoria
+        que possuam pelo menos uma unidade com o status 'DISPONÍVEL'.
 
         Parâmetros:
-        - id_nomes_itens (int): O ID do nome do item a ser atualizado.
-        - id_categorias (int): O ID da nova categoria a ser atribuída.
+        - id_categoria: ID da categoria selecionada.
 
-        Retorna: O número de linhas afetadas (int > 0) se for sucesso, 
-                 ou None / string de erro se falhar (ex: FOREIGN_KEY_ERROR).
+        Retorna: Lista de dicionários (id_nomes_itens, nomes_itens, total_disponivel).
         """
-        query = """
-            UPDATE NOMES_ITENS
-            SET id_categorias = %s
-            WHERE id_nomes_itens = %s;
-        """
-        return self._db.execute(query, (id_categorias, id_nomes_itens), fetch='none')
-    
-    def atribuir_patrimonio(self, numero_patrimonio: str, id_nomes_itens: int) -> int or str or None:
-        """
-        [Criação de Item Físico (Patrimônio)]
-        Insere um novo item físico na tabela ITENS com o número de patrimônio e 
-        vinculado a um Nome de Item, definindo o status inicial como 'DISPONÍVEL' (id_status=1).
-        
-        OBS: Pressupõe que o ID 1 na tabela STATUS é 'DISPONÍVEL'.
+        id_disponivel = self._obter_id_status('DISPONÍVEL')
+        if id_disponivel is None:
+            print("ERRO: Status 'DISPONÍVEL' não encontrado.")
+            return []
 
-        Retorna: O id_itens (int) gerado se for sucesso, ou string de erro.
-        """
-        # O status inicial é 1 (DISPONÍVEL), o local inicial é 1 (ESTOQUE)
-        # Note que a coluna id_locais na tabela ITENS não é NOT NULL no seu esquema, mas a id_status é.
         query = """
-            INSERT INTO ITENS (id_nomes_itens, numero_patrimonio, id_status)
-            VALUES (%s, %s, 1) 
-            RETURNING id_itens; 
+            SELECT
+                NI.id_nomes_itens,
+                NI.nomes_itens,
+                COUNT(I.id_itens) AS total_disponivel
+            FROM
+                ITENS I
+            JOIN
+                NOMES_ITENS NI ON I.id_nomes_itens = NI.id_nomes_itens
+            WHERE
+                NI.id_categorias = %s AND I.id_status = %s
+            GROUP BY
+                NI.id_nomes_itens, NI.nomes_itens
+            ORDER BY
+                NI.nomes_itens;
         """
-        return self._db.execute(query, (id_nomes_itens, numero_patrimonio), fetch='insert_returning')
-    
-    def listar_status(self) -> List[Dict] or None:
-        """ 
-        [Listagem de Status]
-        Busca e retorna todos os IDs e nomes de status de itens da tabela STATUS.
+        return self._db.execute(query, (id_categoria, id_disponivel), fetch='all')
+
+    def listar_itens_por_nome_e_disponivel(self, id_nomes_itens: int) -> List[Dict] or None:
+        """
+        [Passo 2] Lista as unidades físicas (patrimônio) de um Nome de Item
+        que estão com o status 'DISPONÍVEL', mostrando sua localização atual.
         
-        Retorna: Lista de dicionários com chaves 'id_status' e 'nomes_status'.
+        O usuário seleciona um item específico para a movimentação.
+
+        Parâmetros:
+        - id_nomes_itens: ID do nome do item (ex: 'Notebook Core i3').
+
+        Retorna: Lista de dicionários (id_itens, numero_patrimonio, local_atual_completo).
+        """
+        id_disponivel = self._obter_id_status('DISPONÍVEL')
+        if id_disponivel is None:
+            print("ERRO: Status 'DISPONÍVEL' não encontrado.")
+            return []
+            
+        query = """
+            SELECT
+                I.id_itens,
+                I.numero_patrimonio,
+                CONCAT(L.nome_estrutura, ' - ', L.numero_sala, ' - Pos. ', L.numero_posicao) AS local_atual_completo
+            FROM
+                ITENS I
+            LEFT JOIN
+                LOCAIS L ON I.id_locais = L.id_locais
+            WHERE
+                I.id_nomes_itens = %s AND I.id_status = %s
+            ORDER BY
+                I.numero_patrimonio;
+        """
+        return self._db.execute(query, (id_nomes_itens, id_disponivel), fetch='all')
+        
+    def listar_usuarios(self) -> List[Dict] or None:
+        """
+        [Passo 3] Lista todos os usuários e seus cargos para seleção do receptor.
+        
+        O usuário seleciona para quem o item será movimentado.
+
+        Retorna: Lista de dicionários (id_juncao_usuario_cp, nomes_usuarios, nomes_cargos).
         """
         query = """
-            SELECT id_status, nomes_status
-            FROM STATUS;
+            SELECT
+                JUC.id_juncao_usuario_cp,
+                U.nomes_usuarios,
+                C.nomes_cargos
+            FROM
+                JUNCAO_USUARIOS_CP JUC
+            JOIN
+                USUARIOS U ON JUC.id_usuarios = U.id_usuarios
+            JOIN
+                JUNCAO_CARGOS_PERMISSOES JCP ON JUC.id_juncao_cargos_permissoes = JCP.id_juncao_cargos_permissoes
+            JOIN
+                CARGOS C ON JCP.id_cargos = C.id_cargos
+            ORDER BY
+                U.nomes_usuarios;
         """
         return self._db.execute(query, fetch='all')
-    
-    def atribuir_status(self, id_itens: int, id_status: int) -> int or str or None:
+        
+    def mostrar_movimentacao_preview(self, id_item: int, id_juncao_cp_receptor: int) -> Dict[str, Any] or None:
         """
-        [Atualização de Status de Item Físico]
-        Atualiza o campo id_status de um item específico na tabela ITENS.
+        [Passo 4] Busca os detalhes dos IDs selecionados para que o usuário possa revisar
+        a movimentação antes de confirmá-la.
 
-        Retorna: O número de linhas afetadas (int > 0) se for sucesso, 
-                 ou None / string de erro se falhar (ex: FOREIGN_KEY_ERROR).
+        Parâmetros:
+        - id_item: ID da unidade física do item (id_itens).
+        - id_juncao_cp_receptor: ID da junção do usuário que receberá o item.
+
+        Retorna: Dicionário com (item_nome, patrimonio_numero, receptor_nome_completo) ou None.
         """
-        query = """
+        preview_data = {}
+        
+        # Detalhes do Item
+        item_query = """
+            SELECT
+                NI.nomes_itens,
+                I.numero_patrimonio
+            FROM
+                ITENS I
+            JOIN
+                NOMES_ITENS NI ON I.id_nomes_itens = NI.id_nomes_itens
+            WHERE
+                I.id_itens = %s;
+        """
+        item_data = self._db.execute(item_query, (id_item,), fetch='one')
+        if item_data:
+            preview_data['item_nome'] = item_data['nomes_itens']
+            preview_data['patrimonio_numero'] = item_data['numero_patrimonio']
+        else:
+            return None
+            
+        # Detalhes do Receptor
+        receptor_query = """
+            SELECT
+                U.nomes_usuarios,
+                C.nomes_cargos
+            FROM
+                JUNCAO_USUARIOS_CP JUC
+            JOIN
+                USUARIOS U ON JUC.id_usuarios = U.id_usuarios
+            JOIN
+                JUNCAO_CARGOS_PERMISSOES JCP ON JUC.id_juncao_cargos_permissoes = JCP.id_juncao_cargos_permissoes
+            JOIN
+                CARGOS C ON JCP.id_cargos = C.id_cargos
+            WHERE
+                JUC.id_juncao_usuario_cp = %s;
+        """
+        receptor_data = self._db.execute(receptor_query, (id_juncao_cp_receptor,), fetch='one')
+        if receptor_data:
+            preview_data['receptor_nome_completo'] = f"{receptor_data['nomes_usuarios']} ({receptor_data['nomes_cargos']})"
+        else:
+            preview_data['receptor_nome_completo'] = "Usuário/Cargo Desconhecido"
+            
+        return preview_data
+
+    def realizar_movimentacao(self, executor_id_juncao_cp: int, id_item_movido: int, id_juncao_cp_receptor: int) -> bool:
+        """
+        [Passo 5 - Transação Lógica] Executa a movimentação final:
+        1. Atualiza o status do item na tabela ITENS para 'EM USO' e define id_locais = NULL.
+        2. Insere um novo registro na tabela MOVIMENTACOES (log de auditoria) com status 'EM USO'.
+
+        Retorna: True se a movimentação for bem-sucedida (ambas as queries), False caso contrário.
+        """
+        
+        # 1. Obter o ID do Status 'EM USO'
+        id_em_uso = self._obter_id_status('EM USO')
+        if id_em_uso is None:
+            print("ERRO: Status 'EM USO' não encontrado. Não é possível mover o item.")
+            return False
+            
+        # 2. Atualizar o status e a localização do item na tabela ITENS (Estado Atual)
+        update_item_query = """
             UPDATE ITENS
-            SET id_status = %s
+            SET id_status = %s, id_locais = NULL
             WHERE id_itens = %s;
         """
-        return self._db.execute(query, (id_status, id_itens), fetch='none')
+        sucesso_update = self._db.execute(update_item_query, (id_em_uso, id_item_movido), fetch='none')
+        
+        if not sucesso_update:
+            print(f"ERRO: Falha ao atualizar o status/local do item ID {id_item_movido}.")
+            return False
+
+        # 3. Inserir o registro de movimentação (Saída) na MOVIMENTACOES (Histórico)
+        insert_movimentacao_query = """
+            INSERT INTO MOVIMENTACOES 
+                (id_itens, id_status, id_juncao_usuario_cp, data, id_locais)
+            VALUES 
+                (%s, %s, %s, %s, NULL);
+        """
+        
+        data_movimentacao = datetime.now()
+        
+        # Aqui, o id_juncao_cp_receptor é usado como o 'executor' do movimento, 
+        # que na prática representa o novo responsável pelo item.
+        sucesso_insert = self._db.execute(insert_movimentacao_query, 
+                                          (id_item_movido, id_em_uso, id_juncao_cp_receptor, data_movimentacao), 
+                                          fetch='none')
+                                          
+        if sucesso_insert:
+            print(f"INFO: Item ID {id_item_movido} movimentado com sucesso para o receptor JUC ID {id_juncao_cp_receptor}.")
+            return True
+        else:
+            print(f"ERRO: Falha ao registrar a movimentação do item ID {id_item_movido}. Estado do item pode estar inconsistente.")
+            return False
+        
+    # ==============================================================================================================================#     
+    # Criação e Exclusão de Itens
+    # ==============================================================================================================================#  
+
+    def inserir_nome_item(self, nome_item: str, id_categoria: int) -> int or None:
+        """
+        [PASSO 1/3: NOME/CATEGORIA]
+        Insere o tipo de item na tabela NOMES_ITENS ou retorna o ID se já existir.
+        
+        Retorna: id_nomes_itens ou None.
+        """
+        # 1. Tenta buscar o ID existente
+        query_select = "SELECT id_nomes_itens FROM NOMES_ITENS WHERE nomes_itens = %s;"
+        existing_id = self._db.execute(query_select, (nome_item,), fetch='one')
+        
+        if existing_id:
+            print(f"INFO: Tipo de item '{nome_item}' já existe. ID: {existing_id['id_nomes_itens']}")
+            return existing_id['id_nomes_itens']
+            
+        # 2. Se não existir, insere
+        query_insert = """
+            INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) 
+            VALUES (%s, %s) 
+            RETURNING id_nomes_itens;
+        """
+        result = self._db.execute(query_insert, (nome_item, id_categoria), fetch='one')
+        
+        if result:
+            print(f"INFO: Novo tipo de item '{nome_item}' inserido. ID: {result['id_nomes_itens']}")
+            return result['id_nomes_itens']
+        return None
+
+    def registrar_patrimonio(self, id_nomes_itens: int, numero_patrimonio: str, id_status_inicial: int) -> int or None:
+        """
+        [PASSO 2/3: PATRIMÔNIO]
+        Insere o item patrimonial na tabela ITENS.
+        
+        ATENÇÃO: id_status_inicial deve ser o ID que você definiu para o status
+        inicial do item (Ex: 1 - DISPONÍVEL, 2 - EM USO).
+        
+        Retorna: id_itens do novo item ou None.
+        """
+        query = """
+            INSERT INTO ITENS (id_nomes_itens, numero_patrimonio, id_status) 
+            VALUES (%s, %s, %s) 
+            RETURNING id_itens;
+        """
+        result = self._db.execute(query, (id_nomes_itens, numero_patrimonio, id_status_inicial), fetch='one')
+        
+        if result:
+            print(f"INFO: Item patrimonial '{numero_patrimonio}' inserido. ID: {result['id_itens']}")
+            return result['id_itens']
+        
+        print(f"ERRO: Falha ao inserir item com patrimônio {numero_patrimonio}. Patrimônio pode ser duplicado.")
+        return None
+
+    def registrar_movimentacao_inicial(self, id_itens: int, id_local_destino: int, id_juncao_usuario_cp: int) -> int or None:
+        """
+        [PASSO 3/3: LOCALIZAÇÃO INICIAL]
+        Insere a primeira movimentação do item na tabela MOVIMENTACOES.
+        
+        * O status é fixado em 1 (DISPONÍVEL) conforme sua regra.
+        * id_local_origem é NULL (pois o item está sendo criado).
+        
+        Retorna: id_movimentacoes do registro criado ou None.
+        """
+        # Status fixo em 1 (DISPONÍVEL) conforme a regra do usuário
+        STATUS_DISPONIVEL_ID = 1 
+        
+        query = """
+            INSERT INTO MOVIMENTACOES (id_itens, id_local_origem, id_local_destino, id_status, id_juncao_usuario_cp, data) 
+            VALUES (%s, NULL, %s, %s, %s, NOW()) 
+            RETURNING id_movimentacoes;
+        """
+        params = (id_itens, id_local_destino, STATUS_DISPONIVEL_ID, id_juncao_usuario_cp)
+        result = self._db.execute(query, params, fetch='one')
+        
+        if result:
+            print(f"INFO: Movimentação inicial registrada. Item ID: {id_itens}. Local ID: {id_local_destino}")
+            return result['id_movimentacoes']
+        
+        print(f"ERRO: Falha ao registrar movimentação inicial para item {id_itens}.")
+        return None

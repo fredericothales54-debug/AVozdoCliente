@@ -94,8 +94,8 @@ INSERT INTO STATUS (nomes_status) VALUES
 ('DISPONÍVEL'), ('EM USO'), ('EXTRAVIADO');
 
 INSERT INTO CATEGORIAS (nomes_categorias) VALUES
-('Tecnologia e Informática'), ('Mobiliário e Estrutura'), ('Material de Escritório (Consumível)'), 
-('Audiovisual e Periféricos'), ('Climatização');
+('TECNOLOGIA E INFORMÁTICA'), ('MOBILIÁRIO E ESTRUTURA'), ('MATERIAL DE ESCRITÓRIO (CONSUMÍVEL)'), 
+('AUDIOVISUAL E PERIFÉRICOS'), ('CLIMATIZAÇÃO');
 
 INSERT INTO USUARIOS (nomes_usuarios, senhas_usuarios) VALUES
 ('TI', '0000'), 
