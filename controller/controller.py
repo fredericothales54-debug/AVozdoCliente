@@ -1,8 +1,6 @@
 import psycopg2
 import datetime
-from model import conexaobanco_model, item_model, usuario_model
-from model import conexaobanco_model
-from model import item_model, usuario_model, historico 
+from model import conexaobanco_model, item_model, usuario_model, historico 
 
 
 class AppController:
@@ -34,9 +32,11 @@ class AppController:
 
         else:
             return False, "Senha incorreta."
+    def obter_categorias(self):
+        return self.db_model.listar_todas_categorias()             
     def listar_exemplares_por_categoria(self, nome_categoria: str):
         try:
-            exemplares_db = self.db_model.listar_exemplares_por_categoria(nome_categoria) 
+            exemplares_db = self.db_model.listar_exemplares_por_categoria_db(nome_categoria) 
             return exemplares_db 
             
         except Exception as e:
@@ -78,6 +78,7 @@ class AppController:
                 numero_patrimonio=patrimonio, 
                 categoria_produto=None, 
                 localizacao_produto=local_id, 
+                status_produto=None 
             )
             
             if self.db_model.inserir_produto(novo_item):
@@ -87,53 +88,33 @@ class AppController:
         except Exception as e:
             self.view.mostrar_mensagem(f"❌ Erro na operação de cadastro: {e}")
 
-    def realizar_emprestimo(self):
-        self.view.mostrar_mensagem("\n--- Realizar Empréstimo ---")
+    def realizar_emprestimo(self, patrimonio: str, usuario_id: int):
         
-        itens_disponiveis = self.db_model.listar_itens_disponiveis()
-        if not itens_disponiveis:
-            self.view.mostrar_mensagem("Não há itens disponíveis para empréstimo no momento.")
-            return
-
-        self.view.mostrar_mensagem("Itens disponíveis:")
-        for item in itens_disponiveis:
-            self.view.mostrar_mensagem(f"ID: {item.id} | Nome: {item.nome} | Patrimônio: {item.patrimonio} | Status: {item.status}")
-            
-        try:
-            item_id = int(self.view.obter_entrada("Digite o ID do item a ser emprestado: "))
-            usuario_id = int(self.view.obter_entrada("Digite o ID do usuário (pessoa que pega o item): "))
-            id_local_emprestimo = int(self.view.obter_entrada("Digite o ID do local de destino (Tabela LOCAIS): "))
-            dias_previstos = int(self.view.obter_entrada("Digite a previsão de dias para devolução (ex: 7): "))
-        except ValueError:
-            self.view.mostrar_mensagem("❌ ID, Local ou dias deve ser um número válido.")
-            return
-
-        item_obj = self.db_model.obter_item_por_id(item_id)
+        item_id = self.db_model._obter_item_id_por_patrimonio(patrimonio)
         
-        if isinstance(item_obj, str) or not item_obj:
-            self.view.mostrar_mensagem(f"❌ Item com ID {item_id} não encontrado.")
-            return
-            
-        if item_obj.status != 'DISPONIVEL':
-            self.view.mostrar_mensagem(f"❌ Item '{item_obj.nome}' não está disponível para empréstimo (status: {item_obj.status}).")
-            return
-            
-        sucesso = self.db_model.emprestar_item(item_id, usuario_id, id_local_emprestimo, dias_previstos)
-
+        if item_id is None:
+            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado ou já emprestado."}, 404
+        
+        
+        id_local_emprestimo = 3 
+        
+        sucesso = self.db_model.emprestar_item(
+            item_id=item_id, 
+            usuario_id=usuario_id, 
+            id_local_emprestimo=id_local_emprestimo, 
+            dias_previstos=7
+        )
+        
         if sucesso:
-            self.view.mostrar_mensagem(f"✅ Empréstimo do item '{item_obj.nome}' (Patrimônio: {item_obj.patrimonio}) registrado com sucesso!")
-            
-            self.historico.registrar_historico(
-                tipo_evento="EMPRESTIMO",
-                detalhes={
-                    "item_id": item_id,
-                    "item_nome": item_obj.nome,
-                    "usuario_id": usuario_id,
-                    "data_prevista": (datetime.datetime.now() + datetime.timedelta(days=dias_previstos)).strftime("%Y-%m-%d")
-                }
-            )
+            self.historico.registrar_historico("EMPRÉSTIMO", {
+                "patrimonio": patrimonio,
+                "usuario_id": usuario_id,
+                "usuario_nome": self.db_model._obter_nome_usuario_por_id(usuario_id),
+                "data_prevista_devolucao": (datetime.datetime.now() + datetime.timedelta(days=7)).isoformat()
+            })
+            return {"status": "sucesso", "mensagem": f"Item {patrimonio} emprestado com sucesso ao usuário {usuario_id}."}, 200
         else:
-            self.view.mostrar_mensagem("❌ Erro ao registrar o empréstimo. Transação desfeita (rollback).")
+            return {"status": "erro", "mensagem": f"Não foi possível processar o empréstimo do item {patrimonio}."}, 500
 
     def finalizar_app(self):
         """Fecha a conexão e encerra o aplicativo."""
@@ -142,14 +123,11 @@ class AppController:
             self.db_conn.close()
         self.view.mostrar_mensagem("Aplicação encerrada. Conexão com o DB fechada.")
    
-    def obter_categorias(self):
-        return self.db_model.listar_todas_categorias() 
+
 
     def obter_item_por_patrimonio(self, patrimonio):
         return self.db_model.obter_item_por_patrimonio(patrimonio)
     
-    def listar_exemplares_por_categoria(self, nome_categoria: str):
-        return self.db_model.listar_exemplares_por_categoria(nome_categoria)
     
     def obter_nomes_itens(self):
         query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"

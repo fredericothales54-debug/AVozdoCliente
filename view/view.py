@@ -140,15 +140,15 @@ class AppView:
         listbox = tk.Listbox(frm_list, height=15, font=("Arial", 12))
         listbox.pack(side="left", fill="both", expand=True, padx=10, pady=10)
         
-        for nome_categoria in categorias:
-            listbox.insert(tk.END, nome_categoria)
+        for categoria_obj in categorias: 
+            listbox.insert(tk.END, categoria_obj['nome']) 
             
         def abrir_cat():
             sel = listbox.curselection()
             if not sel:
                 messagebox.showinfo("Seleção", "Escolha uma categoria.")
                 return
-            cat = listbox.get(sel[0])
+            cat = listbox.get(sel[0]) 
             self.abrir_itens_categoria(parent, cat)
             
         btn_frm = tk.Frame(frm_list, bg="white")
@@ -168,11 +168,9 @@ class AppView:
         
        
         def carregar_treeview():
-            # Destrói a Treeview antiga e recria
             for w in tree_frame.winfo_children():
                 w.destroy()
                 
-            
             exemplares = self.controller.listar_exemplares_por_categoria(categoria) 
 
             
@@ -195,6 +193,7 @@ class AppView:
             for ex in exemplares:
                 chave = ex["patrimonio"] 
                 nome_item = ex.get("nome", "N/A") 
+                
                 tree.insert("", tk.END, iid=chave, values=(nome_item, ex["patrimonio"], ex["status"], ex.get("em_posse", "N/A"))) 
             
             return tree 
@@ -204,23 +203,19 @@ class AppView:
             sel = tree.selection()
             if not sel: return
             patrimonio = sel[0] 
-
             
-            resultado = self.controller.realizar_emprestimo(
+            resultado, _ = self.controller.realizar_emprestimo(
                 patrimonio, 
-                self.usuario_logado.id_usuario 
+                self.usuario_logado.id 
             )
             
             if resultado['status'] == 'sucesso':
-                messagebox.showinfo("Sucesso", "Requisição registrada. Status atualizado.")
-                
-                item_atualizado = self.controller.obter_item_por_patrimonio(patrimonio) 
-                
-                if item_atualizado:
-                    tree.item(patrimonio, values=(item_atualizado["nome"], item_atualizado["patrimonio"], item_atualizado["status"], item_atualizado["em_posse"]))
+                messagebox.showinfo("Sucesso", resultado['mensagem'])
+                carregar_treeview() 
             else:
-                messagebox.showwarning("Erro", resultado['mensagem'])
-
+                messagebox.showerror("Erro de Empréstimo", resultado['mensagem'])
+            
+            
         def devolver_exemplar():
             sel = tree.selection()
             if not sel: return
@@ -234,7 +229,7 @@ class AppView:
                 item_atualizado = self.controller.obter_item_por_patrimonio(patrimonio)
                 
                 if item_atualizado:
-                    tree.item(patrimonio, values=(item_atualizado["nome"], item_atualizado["patrimonio"], item_atualizado["status"], item_atualizado["em_posse"]))
+                    tree.item(patrimonio, values=(item_atualizado.nome, item_atualizado.patrimonio, item_atualizado.status, "Ninguém"))
             else:
                 messagebox.showwarning("Erro", resultado['mensagem'])
                 
@@ -320,39 +315,11 @@ class AppView:
             detalhes_str = mov.get("detalhes", "")
             tree.insert("", tk.END, values=(mov["ts"], mov["tipo"], detalhes_str, mov.get("usuario", "Sistema")))
             
-        dados_tipos_mov = self.controller.obter_contagem_por_tipo_movimentacao()
-        self.relatorio_movimentacoes(parent, dados_tipos_mov)
-
-    def relatorio_movimentacoes(self, parent, dados_tipos_mov):
-        """Gera e exibe um gráfico de barras da contagem de movimentações."""
-        fig_frame = tk.Frame(parent, bg="white")
-        fig_frame.pack(fill="x", pady=10)
-        
-        if not dados_tipos_mov:
-            return
-
-        fig, ax = plt.subplots(figsize=(6, 3))
-        
-        eventos = dados_tipos_mov.keys()
-        contagens = dados_tipos_mov.values()
-
-        sns.barplot(x=list(eventos), y=list(contagens), ax=ax, palette="viridis")
-        ax.set_title("Contagem de Eventos de Movimentação", fontsize=12)
-        ax.set_ylabel("Contagem")
-        ax.set_xlabel("Tipo de Evento")
-        
-        
-        canvas = FigureCanvasTkAgg(fig, master=fig_frame)
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(pady=5)
-        canvas.draw()
-        
-
     @login_required
     def tela_cadastro_item(self, parent):
         """Tela para cadastrar um novo exemplar de item."""
         self.limpar_frame(parent)
-        if self.usuario_logado.nome not in ("ADMIN", "ACCESSFULL"):
+        if self.usuario_logado.nome not in ("TI"):
             messagebox.showerror("Acesso", "Permissão negada.")
             return
 
@@ -363,7 +330,7 @@ class AppView:
 
         nomes_itens_disponiveis = self.controller.obter_nomes_itens()
         locais_disponiveis = self.controller.obter_locais()
-        status_disponiveis = ['DISPONIVEL', 'MANUTENCAO']
+       
         
         nome_item_var = tk.StringVar()
         patrimonio_var = tk.StringVar()
@@ -385,11 +352,11 @@ class AppView:
                 status="DISPONIVEL" 
             )
             
-            if resultado['status'] == 'sucesso':
-                messagebox.showinfo("Sucesso", f"Item '{nome}' (Patrimônio: {patrimonio}) cadastrado.")
-                patrimonio_var.set("")
-            else:
-                messagebox.showerror("Erro", resultado['mensagem'])
+           
+
+            messagebox.showerror("Erro de Lógica", "O método AppView.tela_cadastro_item() possui lógica de entrada de dados duplicada/inconsistente com AppController.cadastrar_item().")
+            return
+            
 
         row = 0
         ttk.Label(form_frame, text="Nome/Tipo do Item:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
@@ -410,7 +377,8 @@ class AppView:
     def tela_usuarios(self, parent):
         """Tela de gerenciamento de usuários (apenas para ADMIN/ACCESSFULL)."""
         self.limpar_frame(parent)
-        if self.usuario_logado.tipo not in ("ADMIN", "ACCESSFULL"):
+        # Assumindo que o atributo 'tipo' existe no objeto usuario_logado
+        if self.usuario_logado.nome not in ("TI"):
             messagebox.showerror("Acesso", "Permissão negada.")
             return
 
@@ -447,7 +415,7 @@ class AppView:
             senha = simpledialog.askstring("Criar Usuário", "Digite a senha (texto puro):", show='*')
             
             if nome and matricula and senha:
-                resultado = self.controller.cadastrar_novo_usuario(
+                resultado = self.controller.cadastrar_novo_usuario_controller(
                     nome=nome, 
                     matricula=matricula, 
                     senha_texto_puro=senha
@@ -458,3 +426,7 @@ class AppView:
                     self.tela_usuarios(parent) 
                 else:
                     messagebox.showerror("Erro", resultado['mensagem'])
+                    
+        btn_frm = tk.Frame(parent, bg="white")
+        btn_frm.pack(pady=10)
+        ttk.Button(btn_frm, text="Cadastrar Novo Usuário", command=criar_u).pack(padx=10)

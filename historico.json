@@ -1,0 +1,15 @@
+{
+    "eventos": [
+        {
+            "ts": "2025-12-05T16:20:15.468904",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_id": 1,
+                "usuario_nome": "TI",
+                "data_prevista_devolucao": "2025-12-12T16:20:15.468783"
+            }
+        }
+    ],
+    "ultima_atualizacao": "2025-12-05T16:20:15.468909"
+}
