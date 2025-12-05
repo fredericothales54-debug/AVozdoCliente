@@ -11,7 +11,6 @@ def agora_str():
 
 
 def login_required(func):
-    """Decorator que verifica se o usuário está logado antes de executar o método."""
     def wrapper(self, *args, **kwargs):
         if self.usuario_logado is None:
             messagebox.showerror("Acesso Negado", "Você deve estar logado para acessar esta função.")
@@ -35,12 +34,10 @@ class AppView:
         self.tela_login()
         
     def limpar_frame(self, f):
-        """Destrói todos os widgets dentro de um frame."""
         for w in f.winfo_children():
             w.destroy()
 
     def tela_login(self):
-        """Cria e exibe a tela de login."""
         self.login_win = tk.Toplevel(self.root)
         self.login_win.title("Inventário - Login")
         self.login_win.geometry("360x220")
@@ -63,7 +60,6 @@ class AppView:
         frm.columnconfigure(1, weight=1)
 
     def fazer_login(self):
-        """Processa a tentativa de login, delegando ao Controller."""
         user = self.entry_user.get().strip()
         senha = self.entry_pass.get().strip()
 
@@ -76,7 +72,6 @@ class AppView:
             messagebox.showerror("Erro de Login", resposta) 
 
     def abrir_menu(self):
-        """Cria e exibe a janela principal da aplicação."""
         self.login_win.withdraw()
         
         if self.menu_win:
@@ -113,25 +108,19 @@ class AppView:
         self.tela_categorias(content)
 
     def logout(self):
-        """Realiza o logout e retorna à tela de login."""
         self.usuario_logado = None
         self.menu_win.destroy()
         self.tela_login()
         
     def finalizar_app(self):
-        """Encerra a aplicação e fecha a conexão (delegando ao Controller)."""
         self.controller.finalizar_app() 
         self.root.destroy()
         
-   
-        
     @login_required
     def tela_categorias(self, parent):
-        """Exibe as categorias e permite navegar para a lista de itens."""
         self.limpar_frame(parent)
         ttk.Label(parent, text="CATEGORIAS DE PRODUTOS", font=("Arial", 16, "bold"), background="white").pack(pady=10)
         
-     
         categorias = self.controller.obter_categorias()
         
         frm_list = tk.Frame(parent, bg="white")
@@ -158,22 +147,20 @@ class AppView:
 
     @login_required
     def abrir_itens_categoria(self, parent, categoria):
-        """Exibe todos os exemplares (patrimônios) de uma categoria."""
         self.limpar_frame(parent)
         ttk.Label(parent, text=f"ITENS EM: {categoria.upper()}", font=("Arial", 16, "bold"), background="white").pack(pady=10)
         
-       
         tree_frame = tk.Frame(parent, bg="white")
         tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-       
+        tree_container = {'tree': None}
+        
         def carregar_treeview():
             for w in tree_frame.winfo_children():
                 w.destroy()
                 
             exemplares = self.controller.listar_exemplares_por_categoria(categoria) 
 
-            
             cols = ("nome", "patrimonio", "status", "em_posse")
             tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
             
@@ -189,19 +176,24 @@ class AppView:
             
             tree.pack(fill="both", expand=True) 
             
-           
             for ex in exemplares:
                 chave = ex["patrimonio"] 
                 nome_item = ex.get("nome", "N/A") 
                 
                 tree.insert("", tk.END, iid=chave, values=(nome_item, ex["patrimonio"], ex["status"], ex.get("em_posse", "N/A"))) 
             
+            tree_container['tree'] = tree
             return tree 
 
-        tree = carregar_treeview()
+        carregar_treeview()
+
         def requisitar_exemplar():
+            tree = tree_container['tree']
+            if tree is None:
+                return
             sel = tree.selection()
-            if not sel: return
+            if not sel: 
+                return
             patrimonio = sel[0] 
             
             resultado, _ = self.controller.realizar_emprestimo(
@@ -215,21 +207,20 @@ class AppView:
             else:
                 messagebox.showerror("Erro de Empréstimo", resultado['mensagem'])
             
-            
         def devolver_exemplar():
+            tree = tree_container['tree']
+            if tree is None:
+                return
             sel = tree.selection()
-            if not sel: return
+            if not sel: 
+                return
             patrimonio = sel[0]
 
-        
             resultado = self.controller.gerenciar_devolucao(patrimonio)
 
             if resultado['status'] == 'sucesso':
-                messagebox.showinfo("Sucesso", "Devolução registrada. Status atualizado para 'Disponível'.")
-                item_atualizado = self.controller.obter_item_por_patrimonio(patrimonio)
-                
-                if item_atualizado:
-                    tree.item(patrimonio, values=(item_atualizado.nome, item_atualizado.patrimonio, item_atualizado.status, "Ninguém"))
+                messagebox.showinfo("Sucesso", resultado['mensagem'])
+                carregar_treeview()
             else:
                 messagebox.showwarning("Erro", resultado['mensagem'])
                 
@@ -240,7 +231,6 @@ class AppView:
         ttk.Button(action_frm, text="Devolver Item", command=devolver_exemplar).pack(side="left", padx=10)
         ttk.Button(action_frm, text="Voltar para Categorias", command=lambda: self.tela_categorias(parent)).pack(side="left", padx=10)
     
-
     @login_required
     def tela_relatorios(self, parent):
         self.limpar_frame(parent)
@@ -255,7 +245,6 @@ class AppView:
         self.relatorio_itens_pizza(parent, dados_itens_status)
 
     def relatorio_itens_pizza(self, parent, dados_status):
-        """Gera e exibe um gráfico de pizza dos status dos itens."""
         fig, ax = plt.subplots(figsize=(6, 6))
         
         labels = dados_status.keys()
@@ -286,7 +275,6 @@ class AppView:
         
     @login_required
     def tela_movimentacoes(self, parent):
-        """Exibe o histórico de movimentações (Empréstimos, Devoluções, Cadastro/Exclusão)."""
         self.limpar_frame(parent)
         ttk.Label(parent, text="HISTÓRICO DE MOVIMENTAÇÕES", font=("Arial", 16, "bold"), background="white").pack(pady=10)
 
@@ -317,7 +305,6 @@ class AppView:
             
     @login_required
     def tela_cadastro_item(self, parent):
-        """Tela para cadastrar um novo exemplar de item."""
         self.limpar_frame(parent)
         if self.usuario_logado.nome not in ("TI"):
             messagebox.showerror("Acesso", "Permissão negada.")
@@ -330,7 +317,6 @@ class AppView:
 
         nomes_itens_disponiveis = self.controller.obter_nomes_itens()
         locais_disponiveis = self.controller.obter_locais()
-       
         
         nome_item_var = tk.StringVar()
         patrimonio_var = tk.StringVar()
@@ -345,18 +331,8 @@ class AppView:
                 messagebox.showwarning("Aviso", "Preencha todos os campos.")
                 return
 
-            resultado = self.controller.cadastrar_item(
-                nome_item=nome,
-                numero_patrimonio=patrimonio,
-                localizacao=local,
-                status="DISPONIVEL" 
-            )
-            
-           
-
             messagebox.showerror("Erro de Lógica", "O método AppView.tela_cadastro_item() possui lógica de entrada de dados duplicada/inconsistente com AppController.cadastrar_item().")
             return
-            
 
         row = 0
         ttk.Label(form_frame, text="Nome/Tipo do Item:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
@@ -375,9 +351,7 @@ class AppView:
     
     @login_required
     def tela_usuarios(self, parent):
-        """Tela de gerenciamento de usuários (apenas para ADMIN/ACCESSFULL)."""
         self.limpar_frame(parent)
-        # Assumindo que o atributo 'tipo' existe no objeto usuario_logado
         if self.usuario_logado.nome not in ("TI"):
             messagebox.showerror("Acesso", "Permissão negada.")
             return
@@ -407,7 +381,6 @@ class AppView:
 
         for u in usuarios:
             tree.insert("", tk.END, values=(u["id"], u["nome"], u["matricula"], u["tipo"]))
-
 
         def criar_u():
             nome = simpledialog.askstring("Criar Usuário", "Digite o nome completo:")

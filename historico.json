@@ -90,7 +90,31 @@
                 "usuario_logado_id": 1,
                 "data": "2025-12-05T16:29:27.562801"
             }
+        },
+        {
+            "ts": "2025-12-05T18:24:59.365158",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000015",
+                "item_nome": "Notebook Core i3"
+            }
+        },
+        {
+            "ts": "2025-12-05T18:27:02.291540",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000014",
+                "item_nome": "Notebook Core i3"
+            }
+        },
+        {
+            "ts": "2025-12-05T18:29:16.544052",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000013",
+                "item_nome": "Notebook Core i3"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-05T16:29:27.572954"
+    "ultima_atualizacao": "2025-12-05T18:29:16.544060"
 }

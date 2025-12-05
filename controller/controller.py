@@ -7,13 +7,8 @@ class AppController:
     def __init__(self, db_model_class, view_instace, db_conn):
         self.db_conn = db_conn
         self.view = view_instace
-        
-       
         self.db_model = db_model_class(self.db_conn) 
-        
-        
         self.historico = historico 
-        
         self.running = True
         
     def fazer_login(self, matricula: str, senha_digitada: str):
@@ -25,26 +20,22 @@ class AppController:
         senha_armazenada = dados_usuario[2]
 
         if senha_digitada == senha_armazenada: 
-            
             usuario_logado = usuario_model(dados_usuario[0], dados_usuario[1], dados_usuario[2])
-
             return True, usuario_logado 
-
         else:
             return False, "Senha incorreta."
+            
     def obter_categorias(self):
-        return self.db_model.listar_todas_categorias()             
+        return self.db_model.listar_todas_categorias()
+        
     def listar_exemplares_por_categoria(self, nome_categoria: str):
         try:
             exemplares_db = self.db_model.listar_exemplares_por_categoria_db(nome_categoria) 
             return exemplares_db 
-            
         except Exception as e:
             print(f"❌ Erro no Controller ao listar exemplares por categoria: {e}")
             return []
     
-   
-
     def iniciar_app(self):
         self.view.mostrar_mensagem("Bem-vindo ao sistema de Inventário!")
 
@@ -89,13 +80,12 @@ class AppController:
             self.view.mostrar_mensagem(f"❌ Erro na operação de cadastro: {e}")
 
     def realizar_emprestimo(self, patrimonio: str, usuario_id: int):
-        
         item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
         
         if not item_obj:
             return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
         
-        if item_obj.status != 'DISPONIVEL': 
+        if item_obj.status != 'DISPONÍVEL': 
             return {"status": "erro", "mensagem": f"Item '{patrimonio}' não está disponível para empréstimo (status: {item_obj.status})."}, 400
             
         id_local_emprestimo = 3 
@@ -112,24 +102,50 @@ class AppController:
             self.historico.registrar_historico("EMPRÉSTIMO", {
                 "patrimonio": patrimonio,
                 "item_nome": item_obj.nome,
-                # ...
             })
             return {"status": "sucesso", "mensagem": f"Item {patrimonio} emprestado com sucesso."}, 200
         else:
             return {"status": "erro", "mensagem": f"Não foi possível processar o empréstimo do item {patrimonio}."}, 500
 
+    def gerenciar_devolucao(self, patrimonio: str):
+        item_id = self.db_model._obter_item_id_por_patrimonio(patrimonio)
+        
+        if item_id is None:
+            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}
+            
+        sucesso = self.db_model.devolucao_item(item_id)
+        
+        if sucesso:
+            return {"status": "sucesso", "mensagem": f"Item {patrimonio} devolvido e status atualizado."}
+        else:
+            return {"status": "erro", "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."}
+
+    def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
+        if not nome or not matricula or not senha_texto_puro:
+            return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}
+            
+        novo_usuario_obj = usuario_model(
+            id_usuarios=None,
+            nomes_usuarios=matricula, 
+            senhas_usuarios=senha_texto_puro
+        )
+        setattr(novo_usuario_obj, 'nome', nome) 
+        
+        sucesso = self.db_model.cadastrar_usuario(novo_usuario_obj)
+
+        if sucesso:
+            return {"status": "sucesso", "mensagem": f"Usuário {nome} ({matricula}) cadastrado com sucesso!"}
+        else:
+            return {"status": "erro", "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."}
+
     def finalizar_app(self):
-        """Fecha a conexão e encerra o aplicativo."""
         self.running = False
         if self.db_conn:
             self.db_conn.close()
         self.view.mostrar_mensagem("Aplicação encerrada. Conexão com o DB fechada.")
-   
-
 
     def obter_item_por_patrimonio(self, patrimonio):
         return self.db_model.obter_item_por_patrimonio(patrimonio)
-    
     
     def obter_nomes_itens(self):
         query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
@@ -142,12 +158,11 @@ class AppController:
         return [row[0] for row in rows] if rows else []
 
     def obter_lista_usuarios(self):
-        
         query = """
         SELECT 
             u.id_usuarios, 
             u.nomes_usuarios,
-            jucp.id_juncao_usuario_cp, -- Usado como "Matrícula/Usuário"
+            jucp.id_juncao_usuario_cp,
             np.nomes_permissoes
         FROM 
             USUARIOS u
@@ -177,7 +192,6 @@ class AppController:
         return dict(rows) if rows else {}
 
     def obter_historico_movimentacoes(self):
-        
         dados_historico = historico.carregar_dados()
         return dados_historico.get('eventos', [])
 
@@ -188,43 +202,3 @@ class inventarioController:
             raise ValueError("Conexão com o banco de dados não pode ser nula.")
         self.db_conn = db_conn
         self.db_model = conexaobanco_model(self.db_conn)
-        
-    def gerenciar_devolucao(self, patrimonio: str):
-        item_id = self.db_model._obter_item_id_por_patrimonio(patrimonio)
-        
-        if item_id is None:
-            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
-            
-        
-        sucesso = self.db_model.devolucao_item(item_id)
-        
-        if sucesso:
-            return {"status": "sucesso",
-                    "mensagem": f"Item {patrimonio} devolvido e status atualizado."
-                    }, 200
-        else:
-            return {"status": "erro",
-                    "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
-                    }, 500
-
-    def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
-        if not nome or not matricula or not senha_texto_puro:
-            return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}, 400
-            
-        novo_usuario_obj = usuario_model(
-            id_usuarios=None,
-            nomes_usuarios=matricula, 
-            senhas_usuarios=senha_texto_puro
-        )
-        setattr(novo_usuario_obj, 'nome', nome) 
-        
-        sucesso = self.db_model.cadastrar_usuario(novo_usuario_obj)
-
-        if sucesso:
-            return {"status": "sucesso",
-                    "mensagem": f"Usuário {nome} ({matricula}) cadastrado com sucesso!"
-                    }, 201
-        else:
-            return {"status": "erro",
-                    "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."
-                    }, 409
