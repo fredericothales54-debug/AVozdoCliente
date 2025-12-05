@@ -39,6 +39,7 @@ class movimentacaomodel:
 class conexaobanco_model:
     def __init__(self,conn):
         self.conn = conn
+        
     def _executar_query(self, query, params=None, fetchone=False,commit=False):
         try:
             with self.conn.cursor() as cursor:
@@ -55,6 +56,19 @@ class conexaobanco_model:
                 self.conn.rollback()
             print(f" Erro de query: {e}")
             return None 
+
+    def _obter_juncao_cp(self, id_usuarios: int):
+        """Busca o id_juncao_usuario_cp a partir do id_usuarios."""
+        query = "SELECT id_juncao_usuario_cp FROM JUNCAO_USUARIOS_CP WHERE id_usuarios = %s LIMIT 1;"
+        row = self._executar_query(query, (id_usuarios,), fetchone=True)
+        return row[0] if row else None
+        
+    def _obter_item_id_por_patrimonio(self, patrimonio: str):
+        """Busca o id_itens a partir do numero_patrimonio."""
+        query = "SELECT id_itens FROM ITENS WHERE numero_patrimonio = %s LIMIT 1;"
+        row = self._executar_query(query, (patrimonio,), fetchone=True)
+        return row[0] if row else None
+    
     def obter_item_por_id(self, id_interno: int):
         query = """
             SELECT
@@ -63,15 +77,24 @@ class conexaobanco_model:
                 i.numero_patrimonio,
                 'N/A', -- categoria_produto (placeholder)
                 CONCAT(l.numero_sala, ' - ', l.numero_posicao), -- localizacao_produto
-                s.nome_status -- status_produto
+                s.nomes_status -- status_produto (Corrigido para nomes_status)
             FROM
                 ITENS i
             JOIN
-                NOMES_ITENS ni ON i.id_nomes = ni.id_nomes
+                NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO: id_nomes -> id_nomes_itens
             JOIN
                 STATUS s ON i.id_status = s.id_status
-            JOIN
-                LOCAIS l ON i.id_locais = l.id_locais
+            
+            -- CORREÇÃO PRINCIPAL: Junta o local mais recente da MOVIMENTACOES
+            LEFT JOIN LATERAL (
+                SELECT id_locais 
+                FROM MOVIMENTACOES 
+                WHERE id_itens = i.id_itens 
+                ORDER BY id_movimentacoes DESC 
+                LIMIT 1
+            ) AS latest_loc ON TRUE
+            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais
+            
             WHERE
                 i.id_itens = %s;
             """
@@ -79,25 +102,33 @@ class conexaobanco_model:
         if row:
             return item_model.from_db_row(row)
         return "Item não encontrado"
-    def devolucao_item(self,item_id):
+        
+    def devolucao_item(self,item_id: int):
+        almoxarifado_jucp_id = 2 
+        almoxarifado_locais_id = 1 
+        
         try:
-            query_fechar = """
-            UPDATE MOVIMENTACOES 
-            SET data_devolucao_real = NOW() 
-            WHERE id_itens = %s AND data_devolucao_real IS NULL;
+            
+            query_novo_movimento = """
+            INSERT INTO MOVIMENTACOES (id_itens, id_status, id_juncao_usuario_cp, data, id_locais)
+            VALUES (%s, 1, %s, NOW(), %s); -- Status 1: DISPONÍVEL
             """
-            self._executar_query(query_fechar,(item_id,),commit=False)
+            self._executar_query(query_novo_movimento, (item_id, almoxarifado_jucp_id, almoxarifado_locais_id), commit=False)
+            
             query_status_item= """
                 UPDATE ITENS 
-                SET id_status = 1, id_locais = 1 
+                SET id_status = 1 
                 WHERE id_itens = %s;
             """
             self._executar_query(query_status_item,(item_id,),commit=False)
+            
             self.conn.commit()
             return True
         except Exception as e:
             self.conn.rollback()
+            print(f"❌ Erro na transação de devolução: {e}")
             return False
+
     def autenticar_usuario(self,usuarios:str):
         query = """
             SELECT id_usuarios, nomes_usuarios,  senhas_usuarios
@@ -108,27 +139,53 @@ class conexaobanco_model:
         if row:
             return (row)
         return None
+        
     def inserir_produto(self,item_obj):
-        query="""
+        almoxarifado_jucp_id = 2 
+        
+        query_item="""
             INSERT INTO ITENS(
-                id_nomes, 
+                id_nomes_itens,
                 numero_patrimonio, 
-                id_status,
-                id_locais
-                ) VALUES (%s, %s, %s, %s);
+                id_status
+                ) VALUES (%s, %s, %s) RETURNING id_itens;
             """
-        parametros=(
-            item_obj.nome,
+        parametros_item=(
+            item_obj.nome, 
             item_obj.patrimonio,
-            item_obj.status,
-            item_obj.localizacao
+            1 
             )
+        
+        query_movimentacao="""
+            INSERT INTO MOVIMENTACOES (
+                id_itens, 
+                id_status, 
+                id_juncao_usuario_cp, 
+                data, 
+                id_locais
+                ) VALUES (%s, %s, %s, NOW(), %s);
+            """
+        
         try:
-            self._executar_query(query , parametros, fetchone=False,commit=True)
+            row = self._executar_query(query_item, parametros_item, fetchone=True, commit=False)
+            if not row:
+                raise Exception("Falha ao inserir item.")
+            id_item_novo = row[0]
+            
+            parametros_movimentacao = (
+                id_item_novo,
+                almoxarifado_jucp_id,
+                item_obj.localizacao 
+            )
+            self._executar_query(query_movimentacao , parametros_movimentacao, commit=False)
+
+            self.conn.commit()
             return True
         except Exception as e:
             self.conn.rollback()
+            print(f"❌ Erro na transação de inserção: {e}")
             return False
+            
     def deletar_produto(self,item_obj):
         query="""
             DELETE FROM ITENS WHERE numero_patrimonio =%s;
@@ -142,15 +199,16 @@ class conexaobanco_model:
         except Exception as e:
             self.conn.rollback()
             return False
+            
     def cadastrar_usuario(self,usuario_obj):
+        
         query="""
             INSERT INTO USUARIOS(
-            nome,matricula,senha
-            ) VALUES(%s,%s,%s);
+            nomes_usuarios, senhas_usuarios
+            ) VALUES(%s,%s);
             """
         parametros=(
             usuario_obj.nome,
-            usuario_obj.matricula,
             usuario_obj.senha
             )
         try:
@@ -159,28 +217,31 @@ class conexaobanco_model:
         except Exception as e:
             self.conn.rollback()
             return False
+            
     def emprestar_item(self, item_id: int, usuario_id: int, id_local_emprestimo: int, dias_previstos: int = 7):
+        id_juncao_usuario_cp = self._obter_juncao_cp(usuario_id)
+        if not id_juncao_usuario_cp:
+            print(f"❌ Erro: Não foi encontrado JUNCAO_USUARIOS_CP para o id_usuarios: {usuario_id}")
+            return False
+            
         data_emprestimo = datetime.datetime.now()
         data_devolucao_prevista = data_emprestimo + datetime.timedelta(days=dias_previstos)
         
         query_movimentacao = """
-            INSERT INTO MOVIMENTACOES (id_itens, id_usuarios, data, data_devolucao_prevista)
-            VALUES (%s, %s, %s, %s);
+            INSERT INTO MOVIMENTACOES (id_itens, id_status, id_juncao_usuario_cp, data, id_locais)
+            VALUES (%s, 2, %s, %s, %s);
         """
-        params_movimentacao = (item_id, usuario_id, data_emprestimo, data_devolucao_prevista)
+        params_movimentacao = (item_id, 2, id_juncao_usuario_cp, data_emprestimo, id_local_emprestimo)
 
-       
         query_status_item = """
             UPDATE ITENS
-            SET id_status = 2, 
-                id_locais = %s 
+            SET id_status = 2
             WHERE id_itens = %s;
         """
-        params_status_item = (id_local_emprestimo, item_id)
+        params_status_item = (item_id,)
         
         try:
             self._executar_query(query_movimentacao, params_movimentacao, commit=False)
-            
             self._executar_query(query_status_item, params_status_item, commit=False)
             
             self.conn.commit()
@@ -213,22 +274,31 @@ class conexaobanco_model:
                 i.id_itens,
                 ni.nomes_itens, 
                 i.numero_patrimonio,
-                c.nome_categoria,
+                c.nomes_categorias, -- CORRIGIDO: nome_categoria -> nomes_categorias
                 CONCAT(l.numero_sala, ' - ', l.numero_posicao, ' (', l.nome_estrutura, ')'), 
-                s.nome_status
+                s.nomes_status -- CORRIGIDO: nome_status -> nomes_status
             FROM
                 ITENS i
             JOIN
-                NOMES_ITENS ni ON i.id_nomes = ni.id_nomes
+                NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO
             JOIN
                 STATUS s ON i.id_status = s.id_status
-            JOIN
-                LOCAIS l ON i.id_locais = l.id_locais
+            
+            -- CORREÇÃO PRINCIPAL: Junta o local mais recente da MOVIMENTACOES
+            LEFT JOIN LATERAL (
+                SELECT id_locais 
+                FROM MOVIMENTACOES 
+                WHERE id_itens = i.id_itens 
+                ORDER BY id_movimentacoes DESC 
+                LIMIT 1
+            ) AS latest_loc ON TRUE
+            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais
+            
             JOIN 
                 CATEGORIAS c ON ni.id_categorias = c.id_categorias 
             WHERE
                 i.id_status = 1; -- Filtra apenas por 'DISPONÍVEL'
-        """
+            """
         
         rows = self._executar_query(query)
         
@@ -236,6 +306,7 @@ class conexaobanco_model:
             return [item_model.from_db_row(row) for row in rows]
             
         return []
+        
     def listar_exemplares_por_categoria_db(self, nome_categoria: str):
         query = """
             SELECT
@@ -248,15 +319,31 @@ class conexaobanco_model:
                 COALESCE(u.nomes_usuarios, 'N/A') AS em_posse_por -- Nome do usuário em posse
             FROM
                 ITENS i
+            
             JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO
             JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
             JOIN STATUS s ON i.id_status = s.id_status
-            JOIN LOCAIS l ON i.id_locais = l.id_locais -- Assumindo id_locais em ITENS
-            -- Buscar o último status de movimentação: Status 2 é 'EM USO'
-            LEFT JOIN MOVIMENTACOES m ON i.id_itens = m.id_itens AND m.id_status = 2 
-            -- Busca o usuário em posse através das tabelas de junção (DDL)
+            
+            -- 1. Encontrar o registro de localização MAIS RECENTE
+            LEFT JOIN LATERAL (
+                SELECT id_locais 
+                FROM MOVIMENTACOES 
+                WHERE id_itens = i.id_itens 
+                ORDER BY id_movimentacoes DESC 
+                LIMIT 1
+            ) AS latest_loc ON TRUE
+            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais 
+            
+            -- 2. Encontrar o registro de MOVIMENTAÇÃO ATIVA (Em Posse/Em Uso, id_status = 2)
+            LEFT JOIN MOVIMENTACOES m 
+                ON i.id_itens = m.id_itens 
+                AND m.id_status = 2 
+                -- REMOVIDO: AND m.data_devolucao_real IS NULL
+            
+            -- 3. Juntar usuário usando JUNCAO_USUARIOS_CP (id_juncao_usuario_cp está na MOVIMENTACOES)
             LEFT JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
-            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios
+            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios 
+
             WHERE
                 c.nomes_categorias = %s
             ORDER BY
@@ -275,6 +362,57 @@ class conexaobanco_model:
                 "em_posse": row[6] 
             } for row in rows]
         return []
+
+    def obter_item_por_patrimonio(self, patrimonio: str):
+        """Busca item completo por número de patrimônio (necessário para view/atualização pós-devolução)"""
+        query = """
+            SELECT
+                i.id_itens,
+                ni.nomes_itens, 
+                i.numero_patrimonio,
+                c.nomes_categorias, 
+                CONCAT(l.numero_sala, ' - ', l.numero_posicao), 
+                s.nomes_status,
+                COALESCE(u.nomes_usuarios, 'N/A') AS em_posse_por 
+            FROM
+                ITENS i
+            
+            JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens
+            JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
+            JOIN STATUS s ON i.id_status = s.id_status
+            
+            -- Localização
+            LEFT JOIN LATERAL (
+                SELECT id_locais 
+                FROM MOVIMENTACOES 
+                WHERE id_itens = i.id_itens 
+                ORDER BY id_movimentacoes DESC 
+                LIMIT 1
+            ) AS latest_loc ON TRUE
+            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais 
+            
+            -- Usuário em posse (Status 2)
+            LEFT JOIN MOVIMENTACOES m ON i.id_itens = m.id_itens AND m.id_status = 2 
+            LEFT JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
+            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios
+            
+            WHERE
+                i.numero_patrimonio = %s
+        """
+        row = self._executar_query(query, (patrimonio,), fetchone=True)
+        if row:
+            return {
+                "id": row[0],
+                "nome": row[1],
+                "patrimonio": row[2],
+                "categoria": row[3],
+                "localizacao": row[4],
+                "status": row[5],
+                "em_posse": row[6] 
+            }
+        return None
+
+
 ARQUIVO = 'historico.json'
 class Historico:
     @staticmethod

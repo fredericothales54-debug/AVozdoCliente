@@ -5,7 +5,6 @@ from model import conexaobanco_model
 from model import item_model, usuario_model, historico 
 
 
-
 class AppController:
     def __init__(self, db_model_class, view_instace, db_conn):
         self.db_conn = db_conn
@@ -18,6 +17,7 @@ class AppController:
         self.historico = historico 
         
         self.running = True
+        
     def fazer_login(self, matricula: str, senha_digitada: str):
         dados_usuario = self.db_model.autenticar_usuario(matricula) 
 
@@ -64,10 +64,9 @@ class AppController:
         self.view.mostrar_mensagem("\n--- Novo Item Cadastrado ---")
         
         try:
-            nome_id = int(self.view.obter_entrada("Digite o ID do Nome do item (Tabela NOMES_ITENS): "))
+            nome_id = int(self.view.obter_entrada("Digite o ID do Nome do item (Tabela NOMES_ITENS): ")) 
             patrimonio = self.view.obter_entrada("Digite o número do patrimônio: ")
-            status_id = int(self.view.obter_entrada("Digite o ID do Status (Geralmente 1 para DISPONIVEL): "))
-            local_id = int(self.view.obter_entrada("Digite o ID do Local (Tabela LOCAIS): "))
+            local_id = int(self.view.obter_entrada("Digite o ID do Local Inicial (Tabela LOCAIS): "))
         except ValueError:
             self.view.mostrar_mensagem("❌ Erro: ID, Status ou Local devem ser números válidos.")
             return
@@ -75,11 +74,10 @@ class AppController:
         try:
             novo_item = item_model(
                 id_produto=None, 
-                nome_produto=nome_id, 
+                nome_produto=nome_id,
                 numero_patrimonio=patrimonio, 
                 categoria_produto=None, 
                 localizacao_produto=local_id, 
-                status_produto=status_id
             )
             
             if self.db_model.inserir_produto(novo_item):
@@ -104,7 +102,7 @@ class AppController:
         try:
             item_id = int(self.view.obter_entrada("Digite o ID do item a ser emprestado: "))
             usuario_id = int(self.view.obter_entrada("Digite o ID do usuário (pessoa que pega o item): "))
-            id_local_emprestimo = int(self.view.obter_entrada("Digite o ID do local de destino (ex: 2 para 'Em Uso'): "))
+            id_local_emprestimo = int(self.view.obter_entrada("Digite o ID do local de destino (Tabela LOCAIS): "))
             dias_previstos = int(self.view.obter_entrada("Digite a previsão de dias para devolução (ex: 7): "))
         except ValueError:
             self.view.mostrar_mensagem("❌ ID, Local ou dias deve ser um número válido.")
@@ -131,7 +129,6 @@ class AppController:
                     "item_id": item_id,
                     "item_nome": item_obj.nome,
                     "usuario_id": usuario_id,
-                    # Correção do erro de digitação de datetime
                     "data_prevista": (datetime.datetime.now() + datetime.timedelta(days=dias_previstos)).strftime("%Y-%m-%d")
                 }
             )
@@ -151,6 +148,59 @@ class AppController:
     def obter_item_por_patrimonio(self, patrimonio):
         return self.db_model.obter_item_por_patrimonio(patrimonio)
     
+    def listar_exemplares_por_categoria(self, nome_categoria: str):
+        return self.db_model.listar_exemplares_por_categoria_db(nome_categoria)
+    
+    def obter_nomes_itens(self):
+        query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
+        rows = self.db_model._executar_query(query)
+        return [row[0] for row in rows] if rows else []
+
+    def obter_locais(self):
+        query = "SELECT CONCAT(numero_sala, ' - ', nome_estrutura, ' (', numero_posicao, ')') FROM LOCAIS ORDER BY numero_sala;"
+        rows = self.db_model._executar_query(query)
+        return [row[0] for row in rows] if rows else []
+
+    def obter_lista_usuarios(self):
+        
+        query = """
+        SELECT 
+            u.id_usuarios, 
+            u.nomes_usuarios,
+            jucp.id_juncao_usuario_cp, -- Usado como "Matrícula/Usuário"
+            np.nomes_permissoes
+        FROM 
+            USUARIOS u
+        JOIN JUNCAO_USUARIOS_CP jucp ON u.id_usuarios = jucp.id_usuarios
+        JOIN JUNCAO_CARGOS_PERMISSOES jcp ON jucp.id_juncao_cargos_permissoes = jcp.id_juncao_cargos_permissoes
+        JOIN NIVEL_PERMISSOES np ON jcp.id_nivel_permissoes = np.id_nivel_permissoes;
+        """
+        rows = self.db_model._executar_query(query)
+        
+        if rows:
+            return [{
+                "id": row[0],
+                "nome": row[1],
+                "matricula": row[2],
+                "tipo": row[3]
+            } for row in rows]
+        return []
+    
+    def obter_relatorio_status(self):
+        query = """
+        SELECT s.nomes_status, COUNT(i.id_itens) 
+        FROM ITENS i
+        JOIN STATUS s ON i.id_status = s.id_status
+        GROUP BY s.nomes_status;
+        """
+        rows = self.db_model._executar_query(query)
+        return dict(rows) if rows else {}
+
+    def obter_historico_movimentacoes(self):
+        
+        dados_historico = historico.carregar_dados()
+        return dados_historico.get('eventos', [])
+
 
 class inventarioController:
     def __init__(self, db_conn):
@@ -158,20 +208,23 @@ class inventarioController:
             raise ValueError("Conexão com o banco de dados não pode ser nula.")
         self.db_conn = db_conn
         self.db_model = conexaobanco_model(self.db_conn)
-    def gerenciar_devolucao(self, item_id):
-        if not isinstance(item_id, int) or item_id <= 0:
-            return {"status": "erro", "mensagem": "ID do item inválido fornecido."}, 400
+        
+    def gerenciar_devolucao(self, patrimonio: str):
+        item_id = self.db_model._obter_item_id_por_patrimonio(patrimonio)
+        
+        if item_id is None:
+            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
             
         
         sucesso = self.db_model.devolucao_item(item_id)
         
         if sucesso:
             return {"status": "sucesso",
-                    "mensagem": f"Item {item_id} devolvido e status atualizado."
+                    "mensagem": f"Item {patrimonio} devolvido e status atualizado."
                     }, 200
         else:
             return {"status": "erro",
-                    "mensagem": f"Não foi possível registrar a devolução do item {item_id}. Transação desfeita (rollback)."
+                    "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
                     }, 500
 
     def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
@@ -179,17 +232,17 @@ class inventarioController:
             return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}, 400
             
         novo_usuario_obj = usuario_model(
-            id_usuario=None,
-            nome=nome,
-            matricula=matricula
+            id_usuarios=None,
+            nomes_usuarios=matricula, 
+            senhas_usuarios=senha_texto_puro
         )
-        setattr(novo_usuario_obj, 'senha', senha_texto_puro)
+        setattr(novo_usuario_obj, 'nome', nome) 
         
         sucesso = self.db_model.cadastrar_usuario(novo_usuario_obj)
 
         if sucesso:
             return {"status": "sucesso",
-                    "mensagem": f"Usuário {nome} cadastrado com sucesso!"
+                    "mensagem": f"Usuário {nome} ({matricula}) cadastrado com sucesso!"
                     }, 201
         else:
             return {"status": "erro",
