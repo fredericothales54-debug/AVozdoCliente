@@ -58,17 +58,53 @@ class conexaobanco_model:
             return None 
 
     def _obter_juncao_cp(self, id_usuarios: int):
-        """Busca o id_juncao_usuario_cp a partir do id_usuarios."""
         query = "SELECT id_juncao_usuario_cp FROM JUNCAO_USUARIOS_CP WHERE id_usuarios = %s LIMIT 1;"
         row = self._executar_query(query, (id_usuarios,), fetchone=True)
         return row[0] if row else None
         
     def _obter_item_id_por_patrimonio(self, patrimonio: str):
-        """Busca o id_itens a partir do numero_patrimonio."""
         query = "SELECT id_itens FROM ITENS WHERE numero_patrimonio = %s LIMIT 1;"
         row = self._executar_query(query, (patrimonio,), fetchone=True)
         return row[0] if row else None
     
+    def _obter_id_status(self, nome_status: str):
+        query = "SELECT id_status FROM STATUS WHERE nomes_status = %s LIMIT 1;"
+        row = self._executar_query(query, (nome_status.upper(),), fetchone=True)
+        return row[0] if row else None
+    
+    
+    def obter_item_por_patrimonio(self, patrimonio: str):
+        query = """
+            SELECT
+                i.id_itens,
+                ni.nomes_itens,
+                i.numero_patrimonio,
+                c.nomes_categorias,
+                CONCAT(l.numero_sala, ' - ', l.numero_posicao, ' (', l.nome_estrutura, ')'),
+                s.nomes_status
+            FROM
+                ITENS i
+            JOIN
+                NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens
+            JOIN
+                STATUS s ON i.id_status = s.id_status
+            LEFT JOIN LATERAL (
+                SELECT id_locais
+                FROM MOVIMENTACOES
+                WHERE id_itens = i.id_itens
+                ORDER BY id_movimentacoes DESC
+                LIMIT 1
+            ) AS latest_loc ON TRUE
+            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais
+            JOIN 
+                CATEGORIAS c ON ni.id_categorias = c.id_categorias
+            WHERE
+                i.numero_patrimonio = %s;
+        """
+        row = self._executar_query(query, (patrimonio,), fetchone=True)
+        if row:
+            return item_model.from_db_row(row)
+        return None
     def obter_item_por_id(self, id_interno: int):
         query = """
             SELECT
@@ -77,11 +113,11 @@ class conexaobanco_model:
                 i.numero_patrimonio,
                 'N/A', -- categoria_produto (placeholder)
                 CONCAT(l.numero_sala, ' - ', l.numero_posicao), -- localizacao_produto
-                s.nomes_status -- status_produto (Corrigido para nomes_status)
+                s.nomes_status -- status_produto 
             FROM
                 ITENS i
             JOIN
-                NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO: id_nomes -> id_nomes_itens
+                NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens 
             JOIN
                 STATUS s ON i.id_status = s.id_status
             
@@ -139,6 +175,10 @@ class conexaobanco_model:
         if row:
             return (row)
         return None
+    def _obter_nome_usuario_por_id(self, id_usuarios: int):
+        query = "SELECT nomes_usuarios FROM USUARIOS WHERE id_usuarios = %s LIMIT 1;"
+        row = self._executar_query(query, (id_usuarios,), fetchone=True)
+        return row[0] if row else "Desconhecido"
         
     def inserir_produto(self,item_obj):
         almoxarifado_jucp_id = 2 
@@ -172,8 +212,11 @@ class conexaobanco_model:
                 raise Exception("Falha ao inserir item.")
             id_item_novo = row[0]
             
+            status_id_disponivel = 1
+            
             parametros_movimentacao = (
                 id_item_novo,
+                status_id_disponivel,
                 almoxarifado_jucp_id,
                 item_obj.localizacao 
             )
@@ -225,13 +268,12 @@ class conexaobanco_model:
             return False
             
         data_emprestimo = datetime.datetime.now()
-        data_devolucao_prevista = data_emprestimo + datetime.timedelta(days=dias_previstos)
         
         query_movimentacao = """
             INSERT INTO MOVIMENTACOES (id_itens, id_status, id_juncao_usuario_cp, data, id_locais)
             VALUES (%s, 2, %s, %s, %s);
         """
-        params_movimentacao = (item_id, 2, id_juncao_usuario_cp, data_emprestimo, id_local_emprestimo)
+        params_movimentacao = (item_id, id_juncao_usuario_cp, data_emprestimo, id_local_emprestimo)
 
         query_status_item = """
             UPDATE ITENS
@@ -274,17 +316,17 @@ class conexaobanco_model:
                 i.id_itens,
                 ni.nomes_itens, 
                 i.numero_patrimonio,
-                c.nomes_categorias, -- CORRIGIDO: nome_categoria -> nomes_categorias
+                c.nomes_categorias, 
                 CONCAT(l.numero_sala, ' - ', l.numero_posicao, ' (', l.nome_estrutura, ')'), 
-                s.nomes_status -- CORRIGIDO: nome_status -> nomes_status
+                s.nomes_status 
             FROM
                 ITENS i
             JOIN
-                NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO
+                NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens 
             JOIN
                 STATUS s ON i.id_status = s.id_status
             
-            -- CORREÇÃO PRINCIPAL: Junta o local mais recente da MOVIMENTACOES
+            -- Junta o local mais recente da MOVIMENTACOES
             LEFT JOIN LATERAL (
                 SELECT id_locais 
                 FROM MOVIMENTACOES 
@@ -313,139 +355,81 @@ class conexaobanco_model:
                 i.id_itens,
                 ni.nomes_itens, 
                 i.numero_patrimonio,
-                c.nomes_categorias, 
-                CONCAT(l.numero_sala, ' - ', l.numero_posicao), 
                 s.nomes_status,
-                COALESCE(u.nomes_usuarios, 'N/A') AS em_posse_por -- Nome do usuário em posse
+                u.nomes_usuarios
             FROM
                 ITENS i
-            
-            JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO
-            JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
+            JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens 
             JOIN STATUS s ON i.id_status = s.id_status
-            
-            -- 1. Encontrar o registro de localização MAIS RECENTE
-            LEFT JOIN LATERAL (
-                SELECT id_locais 
-                FROM MOVIMENTACOES 
-                WHERE id_itens = i.id_itens 
-                ORDER BY id_movimentacoes DESC 
-                LIMIT 1
-            ) AS latest_loc ON TRUE
-            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais 
-            
-            -- 2. Encontrar o registro de MOVIMENTAÇÃO ATIVA (Em Posse/Em Uso, id_status = 2)
-            LEFT JOIN MOVIMENTACOES m 
-                ON i.id_itens = m.id_itens 
-                AND m.id_status = 2 
-                -- REMOVIDO: AND m.data_devolucao_real IS NULL
-            
-            -- 3. Juntar usuário usando JUNCAO_USUARIOS_CP (id_juncao_usuario_cp está na MOVIMENTACOES)
-            LEFT JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
-            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios 
-
+            JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
+            LEFT JOIN 
+                (
+                    SELECT DISTINCT ON (m.id_itens) 
+                        m.id_itens, 
+                        jucp.id_usuarios 
+                    FROM MOVIMENTACOES m
+                    JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
+                    ORDER BY m.id_itens, m.data DESC
+                ) AS ultima_mov ON i.id_itens = ultima_mov.id_itens
+            LEFT JOIN USUARIOS u ON ultima_mov.id_usuarios = u.id_usuarios
             WHERE
                 c.nomes_categorias = %s
             ORDER BY
                 i.numero_patrimonio;
-        """
+            """
+        
         rows = self._executar_query(query, (nome_categoria,))
         
         if rows:
-            return [{
-                "id": row[0],
-                "nome": row[1],
-                "patrimonio": row[2],
-                "categoria": row[3],
-                "localizacao": row[4],
-                "status": row[5],
-                "em_posse": row[6] 
-            } for row in rows]
+            result = []
+            for row in rows:
+               
+                status = row[3]
+                nome_posse = row[4] if status == 'EMPRESTADO' else 'Ninguém'
+                result.append({
+                    "id": row[0],
+                    "nome": row[1],
+                    "patrimonio": row[2],
+                    "status": status,
+                    "em_posse": nome_posse
+                })
+            return result 
         return []
 
-    def obter_item_por_patrimonio(self, patrimonio: str):
-        """Busca item completo por número de patrimônio (necessário para view/atualização pós-devolução)"""
-        query = """
-            SELECT
-                i.id_itens,
-                ni.nomes_itens, 
-                i.numero_patrimonio,
-                c.nomes_categorias, 
-                CONCAT(l.numero_sala, ' - ', l.numero_posicao), 
-                s.nomes_status,
-                COALESCE(u.nomes_usuarios, 'N/A') AS em_posse_por 
-            FROM
-                ITENS i
-            
-            JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens
-            JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
-            JOIN STATUS s ON i.id_status = s.id_status
-            
-            -- Localização
-            LEFT JOIN LATERAL (
-                SELECT id_locais 
-                FROM MOVIMENTACOES 
-                WHERE id_itens = i.id_itens 
-                ORDER BY id_movimentacoes DESC 
-                LIMIT 1
-            ) AS latest_loc ON TRUE
-            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais 
-            
-            -- Usuário em posse (Status 2)
-            LEFT JOIN MOVIMENTACOES m ON i.id_itens = m.id_itens AND m.id_status = 2 
-            LEFT JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
-            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios
-            
-            WHERE
-                i.numero_patrimonio = %s
-        """
-        row = self._executar_query(query, (patrimonio,), fetchone=True)
-        if row:
-            return {
-                "id": row[0],
-                "nome": row[1],
-                "patrimonio": row[2],
-                "categoria": row[3],
-                "localizacao": row[4],
-                "status": row[5],
-                "em_posse": row[6] 
-            }
-        return None
-
-
-ARQUIVO = 'historico.json'
 class Historico:
+    ARQUIVO = 'historico.json'
+
     @staticmethod
     def carregar_dados():
         try:
-            with open(ARQUIVO, 'r', encoding='utf-8') as f:
+            with open(Historico.ARQUIVO, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            return {}
+            return {"eventos": []}
+            
+    @staticmethod
+    def registrar_historico(tipo_evento: str, detalhes: dict):
+        dados = Historico.carregar_dados()
+
+        if 'eventos' not in dados:
+            dados['eventos'] = []
+       
+        novo_registro = {
+            "ts": datetime.datetime.now().isoformat(),
+            "tipo": tipo_evento,
+            "detalhes": detalhes
+        }
+        
+        dados["eventos"].append(novo_registro)
+        
+        dados["ultima_atualizacao"] = datetime.datetime.now().isoformat()
+        
+        try:
+            with open(Historico.ARQUIVO, 'w', encoding='utf-8') as f:
+                json.dump(dados, f, indent=4)
+                return True
+        except Exception as e:
+            print(f"Erro ao salvar histórico: {e}")
+            return False
 
 historico = Historico()
-
-def registrar_historico(tipo_evento: str, detalhes: dict):
-    dados = historico.carregar_dados()
-
-   
-    if 'eventos' not in dados:
-        dados['eventos'] = []
-    
-    novo_registro = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "tipo": tipo_evento,
-        "detalhes": detalhes
-    }
-    
-    dados["eventos"].append(novo_registro)
-    
-    dados["ultima_atualizacao"] = datetime.datetime.now().isoformat()
-    
-    try:
-        with open(ARQUIVO, 'w', encoding='utf-8') as f:
-            json.dump(dados, f, indent=4)
-            return True
-    except Exception as e:
-        print(f"Erro ao salvar histórico: {e}")
-        return False
