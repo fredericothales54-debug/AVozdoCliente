@@ -141,7 +141,12 @@ class AppController:
     def finalizar_app(self):
         self.running = False
         if self.db_conn:
-            self.db_conn.close()
+            try:
+                self.db_conn.close()
+                print("Conexão com DB fechada")
+            except Exception as e:
+                print("Erro ao fechar conexão:{e}")
+
         self.view.mostrar_mensagem("Aplicação encerrada. Conexão com o DB fechada.")
 
     def obter_item_por_patrimonio(self, patrimonio):

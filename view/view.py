@@ -113,8 +113,26 @@ class AppView:
         self.tela_login()
         
     def finalizar_app(self):
-        self.controller.finalizar_app() 
-        self.root.destroy()
+        try:
+            self.controller.finalizar_app() 
+        except Exception as e:
+            print ("erro ao finalizar controller")
+        try:
+            if self.menu_win and self.menu_win.winfo_exists():
+                self.menu_win.destroy()
+        except:
+            pass
+        try:
+            if self.login_win and self.login_win.winfo_exists():
+                self.login_win.destroy()
+        except:
+            pass
+        try:
+            self.root.quit()
+            self.root.destroy()
+        except:
+            pass
+        
         
     @login_required
     def tela_categorias(self, parent):
