@@ -251,6 +251,16 @@ class conexaobanco_model:
             self.conn.rollback()
             print(f"❌ Erro na transação de empréstimo: {e}")
             return False
+    def _obter_id_status(self, nome_status: str) -> int:
+      
+        query = "SELECT id_status FROM STATUS WHERE nomes_status = %s;"
+        resultado = self._db.execute(query, (nome_status,), fetch='one')
+        
+        if resultado:
+            return resultado[0]
+        else:
+            raise ValueError(f"Status '{nome_status}' não encontrado no banco de dados.")
+
 
     def listar_todas_categorias(self):
         
@@ -307,111 +317,32 @@ class conexaobanco_model:
             
         return []
         
-    def listar_exemplares_por_categoria_db(self, nome_categoria: str):
+    def listar_exemplares_por_categoria(self, nome_categoria: str):
+        id_disponivel = self._obter_id_status('DISPONÍVEL')
+        if id_disponivel is None:
+            print("ERRO: Status 'DISPONÍVEL' não encontrado.")
+            return []
+
         query = """
-            SELECT
-                i.id_itens,
-                ni.nomes_itens, 
-                i.numero_patrimonio,
-                c.nomes_categorias, 
-                CONCAT(l.numero_sala, ' - ', l.numero_posicao), 
-                s.nomes_status,
-                COALESCE(u.nomes_usuarios, 'N/A') AS em_posse_por -- Nome do usuário em posse
-            FROM
-                ITENS i
-            
-            JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens -- CORRIGIDO
-            JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
-            JOIN STATUS s ON i.id_status = s.id_status
-            
-            -- 1. Encontrar o registro de localização MAIS RECENTE
-            LEFT JOIN LATERAL (
-                SELECT id_locais 
-                FROM MOVIMENTACOES 
-                WHERE id_itens = i.id_itens 
-                ORDER BY id_movimentacoes DESC 
-                LIMIT 1
-            ) AS latest_loc ON TRUE
-            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais 
-            
-            -- 2. Encontrar o registro de MOVIMENTAÇÃO ATIVA (Em Posse/Em Uso, id_status = 2)
-            LEFT JOIN MOVIMENTACOES m 
-                ON i.id_itens = m.id_itens 
-                AND m.id_status = 2 
-                -- REMOVIDO: AND m.data_devolucao_real IS NULL
-            
-            -- 3. Juntar usuário usando JUNCAO_USUARIOS_CP (id_juncao_usuario_cp está na MOVIMENTACOES)
-            LEFT JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
-            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios 
-
-            WHERE
-                c.nomes_categorias = %s
-            ORDER BY
-                i.numero_patrimonio;
-        """
-        rows = self._executar_query(query, (nome_categoria,))
-        
-        if rows:
-            return [{
-                "id": row[0],
-                "nome": row[1],
-                "patrimonio": row[2],
-                "categoria": row[3],
-                "localizacao": row[4],
-                "status": row[5],
-                "em_posse": row[6] 
-            } for row in rows]
-        return []
-
-    def obter_item_por_patrimonio(self, patrimonio: str):
-        """Busca item completo por número de patrimônio (necessário para view/atualização pós-devolução)"""
-        query = """
-            SELECT
-                i.id_itens,
-                ni.nomes_itens, 
-                i.numero_patrimonio,
-                c.nomes_categorias, 
-                CONCAT(l.numero_sala, ' - ', l.numero_posicao), 
-                s.nomes_status,
-                COALESCE(u.nomes_usuarios, 'N/A') AS em_posse_por 
-            FROM
-                ITENS i
-            
-            JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens
-            JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
-            JOIN STATUS s ON i.id_status = s.id_status
-            
-            -- Localização
-            LEFT JOIN LATERAL (
-                SELECT id_locais 
-                FROM MOVIMENTACOES 
-                WHERE id_itens = i.id_itens 
-                ORDER BY id_movimentacoes DESC 
-                LIMIT 1
-            ) AS latest_loc ON TRUE
-            JOIN LOCAIS l ON latest_loc.id_locais = l.id_locais 
-            
-            -- Usuário em posse (Status 2)
-            LEFT JOIN MOVIMENTACOES m ON i.id_itens = m.id_itens AND m.id_status = 2 
-            LEFT JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
-            LEFT JOIN USUARIOS u ON jucp.id_usuarios = u.id_usuarios
-            
-            WHERE
-                i.numero_patrimonio = %s
-        """
-        row = self._executar_query(query, (patrimonio,), fetchone=True)
-        if row:
-            return {
-                "id": row[0],
-                "nome": row[1],
-                "patrimonio": row[2],
-                "categoria": row[3],
-                "localizacao": row[4],
-                "status": row[5],
-                "em_posse": row[6] 
-            }
-        return None
-
+        SELECT
+            NI.nomes_itens,
+            COUNT(I.id_itens) AS total_disponivel
+        FROM
+            ITENS I
+        JOIN
+            NOMES_ITENS NI ON I.id_nomes_itens = NI.id_nomes_itens
+        JOIN
+            STATUS S ON I.id_status = S.id_status
+        JOIN
+            CATEGORIAS C ON NI.id_categorias = C.id_categorias
+        WHERE
+            C.nomes_categorias = %s AND S.nomes_status = %s
+        GROUP BY
+            NI.id_nomes_itens, NI.nomes_itens
+        ORDER BY
+            NI.nomes_itens;
+    """
+        return self._db.execute(query, (nome_categoria, 'DISPONÍVEL'), fetch='all')
 
 ARQUIVO = 'historico.json'
 class Historico:

@@ -36,7 +36,7 @@ class AppController:
             return False, "Senha incorreta."
     def listar_exemplares_por_categoria(self, nome_categoria: str):
         try:
-            exemplares_db = self.db_model.listar_exemplares_por_categoria_db(nome_categoria) 
+            exemplares_db = self.db_model.listar_exemplares_por_categoria(nome_categoria) 
             return exemplares_db 
             
         except Exception as e:
@@ -149,7 +149,7 @@ class AppController:
         return self.db_model.obter_item_por_patrimonio(patrimonio)
     
     def listar_exemplares_por_categoria(self, nome_categoria: str):
-        return self.db_model.listar_exemplares_por_categoria_db(nome_categoria)
+        return self.db_model.listar_exemplares_por_categoria(nome_categoria)
     
     def obter_nomes_itens(self):
         query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"

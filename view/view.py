@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches # Adicionado para legendas no gráfico
+import matplotlib.patches as mpatches 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
 import datetime
@@ -83,7 +83,7 @@ class AppView:
              self.menu_win.destroy()
         
         self.menu_win = tk.Toplevel(self.root)
-        self.menu_win.title(f"Sistema de Estoque - Logado como: {self.usuario_logado.nome}") # Assumindo que o objeto tem nome e tipo
+        self.menu_win.title(f"Sistema de Estoque - Logado como: {self.usuario_logado.nome}") 
         self.menu_win.geometry("1000x600")
         self.menu_win.protocol("WM_DELETE_WINDOW", self.finalizar_app)
 
@@ -162,20 +162,20 @@ class AppView:
         self.limpar_frame(parent)
         ttk.Label(parent, text=f"ITENS EM: {categoria.upper()}", font=("Arial", 16, "bold"), background="white").pack(pady=10)
         
-        # Frame para conter a Treeview e permitir a recarga total
+       
         tree_frame = tk.Frame(parent, bg="white")
         tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # --- Função de Carregamento da Treeview ---
+       
         def carregar_treeview():
             # Destrói a Treeview antiga e recria
             for w in tree_frame.winfo_children():
                 w.destroy()
                 
-            # 1. CHAMADA AO CONTROLLER: Pede a lista de exemplares
+            
             exemplares = self.controller.listar_exemplares_por_categoria(categoria) 
 
-            # 2. Criação da Treeview com colunas corretas
+            
             cols = ("nome", "patrimonio", "status", "em_posse")
             tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
             
@@ -191,11 +191,10 @@ class AppView:
             
             tree.pack(fill="both", expand=True) 
             
-            # 3. Preenchimento da Treeview
+           
             for ex in exemplares:
                 chave = ex["patrimonio"] 
                 nome_item = ex.get("nome", "N/A") 
-                # Certifique-se de que a coluna 'em_posse' está sendo preenchida corretamente
                 tree.insert("", tk.END, iid=chave, values=(nome_item, ex["patrimonio"], ex["status"], ex.get("em_posse", "N/A"))) 
             
             return tree 
@@ -209,7 +208,7 @@ class AppView:
             
             resultado = self.controller.realizar_emprestimo(
                 patrimonio, 
-                self.usuario_logado.id_usuario # Passa o ID único do usuário
+                self.usuario_logado.id_usuario 
             )
             
             if resultado['status'] == 'sucesso':
@@ -353,7 +352,7 @@ class AppView:
     def tela_cadastro_item(self, parent):
         """Tela para cadastrar um novo exemplar de item."""
         self.limpar_frame(parent)
-        if self.usuario_logado.tipo not in ("ADMIN", "ACCESSFULL"):
+        if self.usuario_logado.nome not in ("ADMIN", "ACCESSFULL"):
             messagebox.showerror("Acesso", "Permissão negada.")
             return
 
