@@ -32,8 +32,7 @@ class AppController:
 
         else:
             return False, "Senha incorreta."
-    def obter_categorias(self):
-        return self.db_model.listar_todas_categorias()             
+            
     def listar_exemplares_por_categoria(self, nome_categoria: str):
         try:
             exemplares_db = self.db_model.listar_exemplares_por_categoria_db(nome_categoria) 
@@ -43,7 +42,93 @@ class AppController:
             print(f"❌ Erro no Controller ao listar exemplares por categoria: {e}")
             return []
     
-   
+    def realizar_emprestimo(self, patrimonio: str, usuario_id: int):
+        """
+        Recebe o patrimônio e o ID do usuário para realizar o empréstimo.
+        Este método foi corrigido para aceitar os argumentos da view.
+        """
+        item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
+        
+        if not item_obj:
+            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
+        
+        if item_obj.status != 'DISPONIVEL':
+            return {"status": "erro", "mensagem": f"Item '{patrimonio}' não está disponível para empréstimo (status: {item_obj.status})."}, 400
+            
+        id_local_emprestimo = 3 
+        dias_previstos = 7 
+        
+        sucesso = self.db_model.emprestar_item(
+            item_id=item_obj.id, 
+            usuario_id=usuario_id, 
+            id_local_emprestimo=id_local_emprestimo, 
+            dias_previstos=dias_previstos
+        )
+        
+        if sucesso:
+            self.historico.registrar_historico("EMPRÉSTIMO", {
+                "patrimonio": patrimonio,
+                "item_nome": item_obj.nome,
+                "usuario_id": usuario_id,
+                "usuario_nome": self.db_model._obter_nome_usuario_por_id(usuario_id),
+                "data_prevista_devolucao": (datetime.datetime.now() + datetime.timedelta(days=dias_previstos)).isoformat()
+            })
+            return {"status": "sucesso", "mensagem": f"Item {patrimonio} emprestado com sucesso."}, 200
+        else:
+            return {"status": "erro", "mensagem": f"Não foi possível processar o empréstimo do item {patrimonio}. Transação desfeita."}, 500
+
+    def gerenciar_devolucao(self, patrimonio: str):
+        """
+        [MOVIMENTO DA CLASSE INVENTARIOCONTROLLER PARA APPCONTROLLER]
+        Processa a devolução de um item.
+        """
+        item_id = self.db_model._obter_item_id_por_patrimonio(patrimonio)
+        
+        if item_id is None:
+            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
+            
+        
+        sucesso = self.db_model.devolucao_item(item_id)
+        
+        if sucesso:
+            self.historico.registrar_historico("DEVOLUÇÃO", {
+                "patrimonio": patrimonio,
+                "usuario_logado_id": self.view.usuario_logado.id,
+                "data": datetime.datetime.now().isoformat()
+            })
+            return {"status": "sucesso",
+                    "mensagem": f"Item {patrimonio} devolvido e status atualizado."
+                    }, 200
+        else:
+            return {"status": "erro",
+                    "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
+                    }, 500
+    
+    def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
+        """
+        [MOVIMENTO DA CLASSE INVENTARIOCONTROLLER PARA APPCONTROLLER]
+        Cadastra um novo usuário no sistema.
+        """
+        if not nome or not matricula or not senha_texto_puro:
+            return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}, 400
+            
+        novo_usuario_obj = usuario_model(
+            id_usuarios=None,
+            nomes_usuarios=matricula, 
+            senhas_usuarios=senha_texto_puro
+        )
+        setattr(novo_usuario_obj, 'nome', nome) 
+        
+        sucesso = self.db_model.cadastrar_usuario(novo_usuario_obj)
+
+        if sucesso:
+            return {"status": "sucesso",
+                    "mensagem": f"Usuário {nome} ({matricula}) cadastrado com sucesso!"
+                    }, 201
+        else:
+            return {"status": "erro",
+                    "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."
+                    }, 409
 
     def iniciar_app(self):
         self.view.mostrar_mensagem("Bem-vindo ao sistema de Inventário!")
@@ -54,7 +139,7 @@ class AppController:
             if escolha == '1':
                 self.cadastrar_item()
             elif escolha == '2':
-                self.realizar_emprestimo()
+                self.realizar_emprestimo_antigo() 
             elif escolha == '0':
                 self.finalizar_app()
             else:
@@ -88,33 +173,53 @@ class AppController:
         except Exception as e:
             self.view.mostrar_mensagem(f"❌ Erro na operação de cadastro: {e}")
 
-    def realizar_emprestimo(self, patrimonio: str, usuario_id: int):
+    def realizar_emprestimo_antigo(self):
+        self.view.mostrar_mensagem("\n--- Realizar Empréstimo ---")
         
-        item_id = self.db_model._obter_item_id_por_patrimonio(patrimonio)
+        itens_disponiveis = self.db_model.listar_itens_disponiveis()
+        if not itens_disponiveis:
+            self.view.mostrar_mensagem("Não há itens disponíveis para empréstimo no momento.")
+            return
+
+        self.view.mostrar_mensagem("Itens disponíveis:")
+        for item in itens_disponiveis:
+            self.view.mostrar_mensagem(f"ID: {item.id} | Nome: {item.nome} | Patrimônio: {item.patrimonio} | Status: {item.status}")
+            
+        try:
+            item_id = int(self.view.obter_entrada("Digite o ID do item a ser emprestado: "))
+            usuario_id = int(self.view.obter_entrada("Digite o ID do usuário (pessoa que pega o item): "))
+            id_local_emprestimo = int(self.view.obter_entrada("Digite o ID do local de destino (Tabela LOCAIS): "))
+            dias_previstos = int(self.view.obter_entrada("Digite a previsão de dias para devolução (ex: 7): "))
+        except ValueError:
+            self.view.mostrar_mensagem("❌ ID, Local ou dias deve ser um número válido.")
+            return
+
+        item_obj = self.db_model.obter_item_por_id(item_id)
         
-        if item_id is None:
-            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado ou já emprestado."}, 404
-        
-        
-        id_local_emprestimo = 3 
-        
-        sucesso = self.db_model.emprestar_item(
-            item_id=item_id, 
-            usuario_id=usuario_id, 
-            id_local_emprestimo=id_local_emprestimo, 
-            dias_previstos=7
-        )
-        
+        if isinstance(item_obj, str) or not item_obj:
+            self.view.mostrar_mensagem(f"❌ Item com ID {item_id} não encontrado.")
+            return
+            
+        if item_obj.status != 'DISPONIVEL':
+            self.view.mostrar_mensagem(f"❌ Item '{item_obj.nome}' não está disponível para empréstimo (status: {item_obj.status}).")
+            return
+            
+        sucesso = self.db_model.emprestar_item(item_id, usuario_id, id_local_emprestimo, dias_previstos)
+
         if sucesso:
-            self.historico.registrar_historico("EMPRÉSTIMO", {
-                "patrimonio": patrimonio,
-                "usuario_id": usuario_id,
-                "usuario_nome": self.db_model._obter_nome_usuario_por_id(usuario_id),
-                "data_prevista_devolucao": (datetime.datetime.now() + datetime.timedelta(days=7)).isoformat()
-            })
-            return {"status": "sucesso", "mensagem": f"Item {patrimonio} emprestado com sucesso ao usuário {usuario_id}."}, 200
+            self.view.mostrar_mensagem(f"✅ Empréstimo do item '{item_obj.nome}' (Patrimônio: {item_obj.patrimonio}) registrado com sucesso!")
+            
+            self.historico.registrar_historico(
+                tipo_evento="EMPRESTIMO",
+                detalhes={
+                    "item_id": item_id,
+                    "item_nome": item_obj.nome,
+                    "usuario_id": usuario_id,
+                    "data_prevista": (datetime.datetime.now() + datetime.timedelta(days=dias_previstos)).strftime("%Y-%m-%d")
+                }
+            )
         else:
-            return {"status": "erro", "mensagem": f"Não foi possível processar o empréstimo do item {patrimonio}."}, 500
+            self.view.mostrar_mensagem("❌ Erro ao registrar o empréstimo. Transação desfeita (rollback).")
 
     def finalizar_app(self):
         """Fecha a conexão e encerra o aplicativo."""
@@ -123,11 +228,11 @@ class AppController:
             self.db_conn.close()
         self.view.mostrar_mensagem("Aplicação encerrada. Conexão com o DB fechada.")
    
-
+    def obter_categorias(self):
+        return self.db_model.listar_todas_categorias() 
 
     def obter_item_por_patrimonio(self, patrimonio):
         return self.db_model.obter_item_por_patrimonio(patrimonio)
-    
     
     def obter_nomes_itens(self):
         query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
@@ -180,6 +285,7 @@ class AppController:
         return dados_historico.get('eventos', [])
 
 
+
 class inventarioController:
     def __init__(self, db_conn):
         if db_conn is None:
@@ -187,42 +293,4 @@ class inventarioController:
         self.db_conn = db_conn
         self.db_model = conexaobanco_model(self.db_conn)
         
-    def gerenciar_devolucao(self, patrimonio: str):
-        item_id = self.db_model._obter_item_id_por_patrimonio(patrimonio)
-        
-        if item_id is None:
-            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
-            
-        
-        sucesso = self.db_model.devolucao_item(item_id)
-        
-        if sucesso:
-            return {"status": "sucesso",
-                    "mensagem": f"Item {patrimonio} devolvido e status atualizado."
-                    }, 200
-        else:
-            return {"status": "erro",
-                    "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
-                    }, 500
-
-    def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
-        if not nome or not matricula or not senha_texto_puro:
-            return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}, 400
-            
-        novo_usuario_obj = usuario_model(
-            id_usuarios=None,
-            nomes_usuarios=matricula, 
-            senhas_usuarios=senha_texto_puro
-        )
-        setattr(novo_usuario_obj, 'nome', nome) 
-        
-        sucesso = self.db_model.cadastrar_usuario(novo_usuario_obj)
-
-        if sucesso:
-            return {"status": "sucesso",
-                    "mensagem": f"Usuário {nome} ({matricula}) cadastrado com sucesso!"
-                    }, 201
-        else:
-            return {"status": "erro",
-                    "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."
-                    }, 409
+  

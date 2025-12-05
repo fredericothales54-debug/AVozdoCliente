@@ -9,7 +9,88 @@
                 "usuario_nome": "TI",
                 "data_prevista_devolucao": "2025-12-12T16:20:15.468783"
             }
+        },
+        {
+            "ts": "2025-12-05T16:26:53.441265",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:26:53.440959"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:12.485643",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:12.472303"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.206880",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.196919"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.405253",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.397771"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.593074",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.584524"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.798092",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.788967"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:28:30.913751",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000004",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:28:30.903964"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:29:26.821804",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:29:26.821296"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:29:27.572948",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:29:27.562801"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-05T16:20:15.468909"
+    "ultima_atualizacao": "2025-12-05T16:29:27.572954"
 }
