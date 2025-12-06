@@ -25,8 +25,6 @@ class AppController:
         else:
             return False, "Senha incorreta."
     
-   
-    
     def obter_categorias(self):
         return self.db_model.listar_todas_categorias()
         
@@ -40,7 +38,6 @@ class AppController:
     
     def obter_item_por_patrimonio(self, patrimonio):
         return self.db_model.obter_item_por_patrimonio(patrimonio)
-    
     
     def obter_nomes_itens(self):
         query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
@@ -85,10 +82,7 @@ class AppController:
             } for row in rows]
         return []
     
-    
-    
     def cadastrar_item_interface(self, nome_item: str, patrimonio: str, local_id: int):
-       
         try:
             query_nome = "SELECT id_nomes_itens FROM NOMES_ITENS WHERE nomes_itens = %s LIMIT 1;"
             row_nome = self.db_model._executar_query(query_nome, (nome_item,), fetchone=True)
@@ -121,8 +115,6 @@ class AppController:
         except Exception as e:
             return {"status": "erro", "mensagem": f"Erro ao cadastrar: {str(e)}"}
     
-   
-    
     def realizar_emprestimo(self, patrimonio: str, usuario_id: int):
         item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
         
@@ -147,6 +139,7 @@ class AppController:
         
         if sucesso:
             nome_usuario = self.db_model._obter_nome_usuario_por_id(usuario_id)
+            
             self.historico.registrar_historico("EMPRÉSTIMO", {
                 "patrimonio": patrimonio,
                 "item_nome": item_obj.nome,
@@ -158,36 +151,36 @@ class AppController:
 
     def gerenciar_devolucao(self, patrimonio: str):
         item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
-
+    
         if not item_obj:
             return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}
-
+    
         if item_obj.status not in ['EMPRESTADO', 'EM USO']:
             return {
             "status": "erro", 
             "mensagem": f"Item '{patrimonio}' não pode ser devolvido. Status atual: {item_obj.status}"
             }
-
+    
         item_id = item_obj.id
-
+    
         sucesso = self.db_model.devolucao_item(item_id)
-
+    
         if sucesso:
             nome_usuario = self.view.usuario_logado.nome if self.view.usuario_logado else "Sistema"
-        
+            
             self.historico.registrar_historico("DEVOLUÇÃO", {
                 "patrimonio": patrimonio,
                 "item_nome": item_obj.nome,
-                "usuario": nome_usuario  
+                "usuario": nome_usuario
             })
-        
+            
             return {"status": "sucesso", "mensagem": f"Item {patrimonio} devolvido e status atualizado."}
         else:
             return {
                 "status": "erro", 
                 "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
             }
-    
+ 
     def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
         if not nome or not matricula or not senha_texto_puro:
             return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}
@@ -206,6 +199,57 @@ class AppController:
         else:
             return {"status": "erro", "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."}
 
+    def excluir_produto_controller(self, patrimonio: str):
+        if not patrimonio:
+            return {"status": "erro", "mensagem": "Patrimônio não informado."}
+        
+        item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
+        
+        if not item_obj:
+            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}
+        
+        if item_obj.status == 'EMPRESTADO':
+            return {"status": "erro", "mensagem": f"Não é possível excluir o item '{patrimonio}' pois está EMPRESTADO."}
+        
+        sucesso = self.db_model.deletar_produto(patrimonio)
+        
+        if sucesso:
+            self.historico.registrar_historico("EXCLUSÃO DE ITEM", {
+                "patrimonio": patrimonio,
+                "item_nome": item_obj.nome
+            })
+            return {"status": "sucesso", "mensagem": f"Item '{patrimonio}' excluído com sucesso!"}
+        else:
+            return {"status": "erro", "mensagem": f"Falha ao excluir o item '{patrimonio}'."}
+    
+    def excluir_usuario_controller(self, usuario_id: int, nome_usuario: str):
+        if not usuario_id:
+            return {"status": "erro", "mensagem": "ID de usuário não informado."}
+        
+        if nome_usuario == "TI":
+            return {"status": "erro", "mensagem": "Não é possível excluir o usuário TI do sistema."}
+        
+        sucesso = self.db_model.deletar_usuario(usuario_id)
+        
+        if sucesso:
+            self.historico.registrar_historico("EXCLUSÃO DE USUÁRIO", {
+                "usuario_id": usuario_id,
+                "usuario_nome": nome_usuario
+            })
+            return {"status": "sucesso", "mensagem": f"Usuário '{nome_usuario}' excluído com sucesso!"}
+        else:
+            return {"status": "erro", "mensagem": f"Falha ao excluir o usuário '{nome_usuario}'."}
+    
+    def verificar_itens_emprestados_usuario(self, usuario_id: int):
+        query = """
+            SELECT COUNT(*) 
+            FROM MOVIMENTACOES m
+            JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
+            WHERE jucp.id_usuarios = %s AND m.id_status = 2;
+        """
+        row = self.db_model._executar_query(query, (usuario_id,), fetchone=True)
+        return row[0] if row else 0
+
     def obter_relatorio_status(self):
         query = """
         SELECT s.nomes_status, COUNT(i.id_itens) 
@@ -220,7 +264,6 @@ class AppController:
         dados_historico = historico.carregar_dados()
         return dados_historico.get('eventos', [])
 
-  
     def finalizar_app(self):
         self.running = False
         if self.db_conn:
@@ -229,8 +272,6 @@ class AppController:
                 print("Conexão com DB fechada")
             except Exception as e:
                 print(f"Erro ao fechar conexão: {e}")
-
-        self.view.mostrar_mensagem("Aplicação encerrada. Conexão com o DB fechada.")
 
 
 class inventarioController:

@@ -210,6 +210,7 @@ class AppView:
                 return
             sel = tree.selection()
             if not sel: 
+                messagebox.showwarning("Seleção", "Selecione um item para requisitar.")
                 return
             patrimonio = sel[0] 
             
@@ -230,6 +231,7 @@ class AppView:
                 return
             sel = tree.selection()
             if not sel: 
+                messagebox.showwarning("Seleção", "Selecione um item para devolver.")
                 return
             patrimonio = sel[0]
 
@@ -240,12 +242,47 @@ class AppView:
                 carregar_treeview()
             else:
                 messagebox.showwarning("Erro", resultado['mensagem'])
+        
+        def excluir_item():
+            if self.usuario_logado.nome not in ("TI"):
+                messagebox.showerror("Acesso Negado", "Apenas usuários TI podem excluir itens.")
+                return
+            
+            tree = tree_container['tree']
+            if tree is None:
+                return
+            sel = tree.selection()
+            if not sel:
+                messagebox.showwarning("Seleção", "Selecione um item para excluir.")
+                return
+            
+            patrimonio = sel[0]
+            
+            confirmacao = messagebox.askyesno(
+                "Confirmar Exclusão",
+                f"Tem certeza que deseja EXCLUIR PERMANENTEMENTE o item:\n\nPatrimônio: {patrimonio}\n\nEsta ação não pode ser desfeita!"
+            )
+            
+            if not confirmacao:
+                return
+            
+            resultado = self.controller.excluir_produto_controller(patrimonio)
+            
+            if resultado['status'] == 'sucesso':
+                messagebox.showinfo("Sucesso", resultado['mensagem'])
+                carregar_treeview()
+            else:
+                messagebox.showerror("Erro", resultado['mensagem'])
                 
         action_frm = tk.Frame(parent, bg="white")
         action_frm.pack(pady=10)
         
         ttk.Button(action_frm, text="Requisitar Item", command=requisitar_exemplar).pack(side="left", padx=10)
         ttk.Button(action_frm, text="Devolver Item", command=devolver_exemplar).pack(side="left", padx=10)
+        
+        if self.usuario_logado.nome in ("TI"):
+            ttk.Button(action_frm, text=" Excluir Item", command=excluir_item).pack(side="left", padx=10)
+        
         ttk.Button(action_frm, text="Voltar para Categorias", command=lambda: self.tela_categorias(parent)).pack(side="left", padx=10)
     
     @login_required
@@ -376,6 +413,7 @@ class AppView:
                 item_nome,
                 usuario_acao
             ))
+            
     @login_required
     def tela_cadastro_item(self, parent):
         self.limpar_frame(parent)
@@ -473,22 +511,70 @@ class AppView:
 
         def criar_u():
             nome = simpledialog.askstring("Criar Usuário", "Digite o nome completo:")
-            matricula = simpledialog.askstring("Criar Usuário", "Digite a matrícula (Usuário):")
-            senha = simpledialog.askstring("Criar Usuário", "Digite a senha (texto puro):", show='*')
-            
-            if nome and matricula and senha:
-                resultado = self.controller.cadastrar_novo_usuario_controller(
-                    nome=nome, 
-                    matricula=matricula, 
-                    senha_texto_puro=senha
-                )
+            if not nome:
+                return
                 
-                if resultado['status'] == 'sucesso':
-                    messagebox.showinfo("Sucesso", resultado['mensagem'])
-                    self.tela_usuarios(parent)
-                else:
-                    messagebox.showerror("Erro", resultado['mensagem'])
+            matricula = simpledialog.askstring("Criar Usuário", "Digite a matrícula (Usuário):")
+            if not matricula:
+                return
+                
+            senha = simpledialog.askstring("Criar Usuário", "Digite a senha (texto puro):", show='*')
+            if not senha:
+                return
+            
+            resultado = self.controller.cadastrar_novo_usuario_controller(
+                nome=nome, 
+                matricula=matricula, 
+                senha_texto_puro=senha
+            )
+            
+            if resultado['status'] == 'sucesso':
+                messagebox.showinfo("Sucesso", resultado['mensagem'])
+                self.tela_usuarios(parent)
+            else:
+                messagebox.showerror("Erro", resultado['mensagem'])
+        
+        def excluir_u():
+            sel = tree.selection()
+            if not sel:
+                messagebox.showwarning("Seleção", "Selecione um usuário para excluir.")
+                return
+            
+            item_selecionado = tree.item(sel[0])
+            valores = item_selecionado['values']
+            usuario_id = valores[0]
+            nome_usuario = valores[1]
+            
+            if nome_usuario == "TI":
+                messagebox.showerror("Erro", "Não é possível excluir o usuário TI do sistema.")
+                return
+            
+            itens_emprestados = self.controller.verificar_itens_emprestados_usuario(usuario_id)
+            
+            if itens_emprestados > 0:
+                messagebox.showerror(
+                    "Erro", 
+                    f"O usuário '{nome_usuario}' possui {itens_emprestados} item(ns) emprestado(s).\n\nDevolvam os itens antes de excluir o usuário."
+                )
+                return
+            
+            confirmacao = messagebox.askyesno(
+                "Confirmar Exclusão",
+                f"Tem certeza que deseja EXCLUIR o usuário:\n\n{nome_usuario}\n\nEsta ação não pode ser desfeita!"
+            )
+            
+            if not confirmacao:
+                return
+            
+            resultado = self.controller.excluir_usuario_controller(usuario_id, nome_usuario)
+            
+            if resultado['status'] == 'sucesso':
+                messagebox.showinfo("Sucesso", resultado['mensagem'])
+                self.tela_usuarios(parent)
+            else:
+                messagebox.showerror("Erro", resultado['mensagem'])
                     
         btn_frm = tk.Frame(parent, bg="white")
         btn_frm.pack(pady=10)
-        ttk.Button(btn_frm, text="Cadastrar Novo Usuário", command=criar_u).pack(padx=10)
+        ttk.Button(btn_frm, text=" Cadastrar Novo Usuário", command=criar_u).pack(side="left", padx=10)
+        ttk.Button(btn_frm, text=" Excluir Usuário", command=excluir_u).pack(side="left", padx=10)

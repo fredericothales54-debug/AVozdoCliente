@@ -438,7 +438,75 @@
                 "item_nome": "Projetor port\u00e1til mini",
                 "usuario": "PEDRO"
             }
+        },
+        {
+            "ts": "2025-12-06T13:17:41.328910",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "00",
+                "item_nome": "Cabo VGA 1.5m"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:18:11.528808",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "7",
+                "item_nome": "Ar-Condicionado 12.000 BTU"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:20:18.004773",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "5",
+                "item_nome": "Ar-Condicionado 12.000 BTU"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:20:47.349379",
+            "tipo": "EXCLUS\u00c3O DE USU\u00c1RIO",
+            "detalhes": {
+                "usuario_id": 7,
+                "usuario_nome": "TESTE"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:22.261139",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000018",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:24.874870",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000018",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:37.785914",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000001",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:41.982472",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000001",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-06T01:25:31.458298"
+    "ultima_atualizacao": "2025-12-06T13:21:41.982479"
 }

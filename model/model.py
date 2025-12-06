@@ -248,18 +248,31 @@ class conexaobanco_model:
             print(f"❌ Erro na transação de inserção: {e}")
             return False
             
-    def deletar_produto(self,item_obj):
-        query="""
-            DELETE FROM ITENS WHERE numero_patrimonio =%s;
-            """
-        parametros=(
-            item_obj.patrimonio
-            )        
+    def deletar_produto(self, patrimonio: str):
         try:
-            self._executar_query(query , parametros, fetchone=False,commit=True)
+            query_get_id = "SELECT id_itens FROM ITENS WHERE numero_patrimonio = %s;"
+            row = self._executar_query(query_get_id, (patrimonio,), fetchone=True)
+            
+            if not row:
+                print(f"❌ Item com patrimônio {patrimonio} não encontrado")
+                return False
+            
+            item_id = row[0]
+            
+            query_delete_mov = "DELETE FROM MOVIMENTACOES WHERE id_itens = %s;"
+            self._executar_query(query_delete_mov, (item_id,), commit=False)
+            print(f"✅ Movimentações do item {patrimonio} deletadas")
+            
+            query_delete_item = "DELETE FROM ITENS WHERE numero_patrimonio = %s;"
+            self._executar_query(query_delete_item, (patrimonio,), commit=False)
+            print(f"✅ Item {patrimonio} deletado")
+            
+            self.conn.commit()
             return True
+            
         except Exception as e:
             self.conn.rollback()
+            print(f"❌ Erro ao deletar produto: {e}")
             return False
             
     def cadastrar_usuario(self, usuario_obj):
@@ -309,6 +322,46 @@ class conexaobanco_model:
             self.conn.rollback()
             cursor.close()
             print(f"❌ Erro ao cadastrar usuário: {e}")
+            return False
+    def deletar_usuario(self, usuario_id: int):
+        try:
+            query_check = "SELECT nomes_usuarios FROM USUARIOS WHERE id_usuarios = %s;"
+            row = self._executar_query(query_check, (usuario_id,), fetchone=True)
+            
+            if not row:
+                print(f"❌ Usuário com ID {usuario_id} não encontrado")
+                return False
+            
+            nome_usuario = row[0]
+            
+            if nome_usuario == 'TI':
+                print(f"❌ Não é possível deletar o usuário TI")
+                return False
+            
+            query_get_juncao = "SELECT id_juncao_usuario_cp FROM JUNCAO_USUARIOS_CP WHERE id_usuarios = %s;"
+            juncao_row = self._executar_query(query_get_juncao, (usuario_id,), fetchone=True)
+            
+            if juncao_row:
+                juncao_id = juncao_row[0]
+                
+                query_delete_mov = "DELETE FROM MOVIMENTACOES WHERE id_juncao_usuario_cp = %s;"
+                self._executar_query(query_delete_mov, (juncao_id,), commit=False)
+                print(f"✅ Movimentações do usuário {nome_usuario} deletadas")
+            
+            query_delete_juncao = "DELETE FROM JUNCAO_USUARIOS_CP WHERE id_usuarios = %s;"
+            self._executar_query(query_delete_juncao, (usuario_id,), commit=False)
+            print(f"✅ Junção CP do usuário {nome_usuario} deletada")
+            
+            query_delete_user = "DELETE FROM USUARIOS WHERE id_usuarios = %s;"
+            self._executar_query(query_delete_user, (usuario_id,), commit=False)
+            print(f"✅ Usuário {nome_usuario} deletado")
+            
+            self.conn.commit()
+            return True
+            
+        except Exception as e:
+            self.conn.rollback()
+            print(f"❌ Erro ao deletar usuário: {e}")
             return False
             
     def emprestar_item(self, item_id: int, usuario_id: int, id_local_emprestimo: int, dias_previstos: int = 7):
