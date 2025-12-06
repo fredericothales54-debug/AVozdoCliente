@@ -1,0 +1,5 @@
+DB_HOST = "localhost"
+DB_NAME = "A_Voz_do_Cliente"
+DB_USER = "postgres"
+DB_PASS = "88"
+DB_PORT = "5432"
