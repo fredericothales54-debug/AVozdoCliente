@@ -69,7 +69,7 @@ class AppView:
             self.usuario_logado = resposta 
             self.abrir_menu()
         else:
-            messagebox.showerror("Erro de Login", resposta) 
+            messagebox.showerror("Erro de Login", resposta)
 
     def abrir_menu(self):
         self.login_win.withdraw()
@@ -116,7 +116,7 @@ class AppView:
         try:
             self.controller.finalizar_app() 
         except Exception as e:
-            print ("erro ao finalizar controller")
+            print("Erro ao finalizar controller")
         try:
             if self.menu_win and self.menu_win.winfo_exists():
                 self.menu_win.destroy()
@@ -132,8 +132,7 @@ class AppView:
             self.root.destroy()
         except:
             pass
-        
-        
+
     @login_required
     def tela_categorias(self, parent):
         self.limpar_frame(parent)
@@ -177,7 +176,7 @@ class AppView:
             for w in tree_frame.winfo_children():
                 w.destroy()
                 
-            exemplares = self.controller.listar_exemplares_por_categoria(categoria) 
+            exemplares = self.controller.listar_exemplares_por_categoria(categoria)
 
             cols = ("nome", "patrimonio", "status", "em_posse")
             tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
@@ -198,7 +197,7 @@ class AppView:
                 chave = ex["patrimonio"] 
                 nome_item = ex.get("nome", "N/A") 
                 
-                tree.insert("", tk.END, iid=chave, values=(nome_item, ex["patrimonio"], ex["status"], ex.get("em_posse", "N/A"))) 
+                tree.insert("", tk.END, iid=chave, values=(nome_item, ex["patrimonio"], ex["status"], ex.get("em_posse", "N/A")))
             
             tree_container['tree'] = tree
             return tree 
@@ -334,7 +333,10 @@ class AppView:
         form_frame.pack(pady=10)
 
         nomes_itens_disponiveis = self.controller.obter_nomes_itens()
-        locais_disponiveis = self.controller.obter_locais()
+        locais_dados = self.controller.obter_locais()
+        
+        locais_map = {loc['descricao']: loc['id'] for loc in locais_dados}
+        locais_descricoes = list(locais_map.keys())
         
         nome_item_var = tk.StringVar()
         patrimonio_var = tk.StringVar()
@@ -343,14 +345,27 @@ class AppView:
         def criar_item():
             nome = nome_item_var.get()
             patrimonio = patrimonio_var.get().strip()
-            local = local_var.get()
-            
-            if not nome or not patrimonio or not local:
+            local_descricao = local_var.get()
+    
+            if not nome or not patrimonio or not local_descricao:
                 messagebox.showwarning("Aviso", "Preencha todos os campos.")
                 return
 
-            messagebox.showerror("Erro de Lógica", "O método AppView.tela_cadastro_item() possui lógica de entrada de dados duplicada/inconsistente com AppController.cadastrar_item().")
-            return
+            local_id = locais_map.get(local_descricao)
+            
+            if not local_id:
+                messagebox.showerror("Erro", "Local inválido selecionado.")
+                return
+    
+            resultado = self.controller.cadastrar_item_interface(nome, patrimonio, local_id)
+    
+            if resultado['status'] == 'sucesso':
+                messagebox.showinfo("Sucesso", resultado['mensagem'])
+                nome_item_var.set('')
+                patrimonio_var.set('')
+                local_var.set('')
+            else:
+                messagebox.showerror("Erro", resultado['mensagem'])
 
         row = 0
         tk.Label(form_frame, text="Nome/Tipo do Item:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
@@ -362,7 +377,7 @@ class AppView:
 
         row += 1
         tk.Label(form_frame, text="Local Inicial:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-        ttk.Combobox(form_frame, textvariable=local_var, values=locais_disponiveis, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        ttk.Combobox(form_frame, textvariable=local_var, values=locais_descricoes, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         
         row += 1
         ttk.Button(form_frame, text="Cadastrar Item", command=criar_item).grid(row=row, column=0, columnspan=2, pady=20)
@@ -376,7 +391,7 @@ class AppView:
 
         ttk.Label(parent, text="GERENCIAMENTO DE USUÁRIOS", font=("Arial", 16, "bold"), background="white").pack(pady=10)
 
-        usuarios = self.controller.obter_lista_usuarios() 
+        usuarios = self.controller.obter_lista_usuarios()
         
         if not usuarios:
             ttk.Label(parent, text="Nenhum usuário cadastrado.", background="white").pack(pady=20)
@@ -414,7 +429,7 @@ class AppView:
                 
                 if resultado['status'] == 'sucesso':
                     messagebox.showinfo("Sucesso", resultado['mensagem'])
-                    self.tela_usuarios(parent) 
+                    self.tela_usuarios(parent)
                 else:
                     messagebox.showerror("Erro", resultado['mensagem'])
                     

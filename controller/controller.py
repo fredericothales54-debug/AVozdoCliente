@@ -24,7 +24,9 @@ class AppController:
             return True, usuario_logado 
         else:
             return False, "Senha incorreta."
-            
+    
+   
+    
     def obter_categorias(self):
         return self.db_model.listar_todas_categorias()
         
@@ -36,49 +38,91 @@ class AppController:
             print(f"❌ Erro no Controller ao listar exemplares por categoria: {e}")
             return []
     
-    def iniciar_app(self):
-        self.view.mostrar_mensagem("Bem-vindo ao sistema de Inventário!")
+    def obter_item_por_patrimonio(self, patrimonio):
+        return self.db_model.obter_item_por_patrimonio(patrimonio)
+    
+    
+    def obter_nomes_itens(self):
+        query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
+        rows = self.db_model._executar_query(query)
+        return [row[0] for row in rows] if rows else []
 
-        while self.running:
-            escolha = self.view.mostrar_menu_principal()
-
-            if escolha == '1':
-                self.cadastrar_item()
-            elif escolha == '2':
-                self.realizar_emprestimo()
-            elif escolha == '0':
-                self.finalizar_app()
-            else:
-                self.view.mostrar_mensagem("Opção inválida. Tente novamente.")
-
-    def cadastrar_item(self):
-        self.view.mostrar_mensagem("\n--- Novo Item Cadastrado ---")
+    def obter_locais(self):
+        query = """
+            SELECT 
+                id_locais,
+                CONCAT(numero_sala, ' - ', nome_estrutura, ' - Pos. ', numero_posicao) 
+            FROM LOCAIS 
+            ORDER BY numero_sala;
+        """
+        rows = self.db_model._executar_query(query)
         
-        try:
-            nome_id = int(self.view.obter_entrada("Digite o ID do Nome do item (Tabela NOMES_ITENS): ")) 
-            patrimonio = self.view.obter_entrada("Digite o número do patrimônio: ")
-            local_id = int(self.view.obter_entrada("Digite o ID do Local Inicial (Tabela LOCAIS): "))
-        except ValueError:
-            self.view.mostrar_mensagem("❌ Erro: ID, Status ou Local devem ser números válidos.")
-            return
+        if rows:
+            return [{'id': row[0], 'descricao': row[1]} for row in rows]
+        return []
 
+    def obter_lista_usuarios(self):
+        query = """
+        SELECT 
+            u.id_usuarios, 
+            u.nomes_usuarios,
+            jucp.id_juncao_usuario_cp,
+            np.nomes_permissoes
+        FROM 
+            USUARIOS u
+        JOIN JUNCAO_USUARIOS_CP jucp ON u.id_usuarios = jucp.id_usuarios
+        JOIN JUNCAO_CARGOS_PERMISSOES jcp ON jucp.id_juncao_cargos_permissoes = jcp.id_juncao_cargos_permissoes
+        JOIN NIVEL_PERMISSOES np ON jcp.id_nivel_permissoes = np.id_nivel_permissoes;
+        """
+        rows = self.db_model._executar_query(query)
+        
+        if rows:
+            return [{
+                "id": row[0],
+                "nome": row[1],
+                "matricula": row[2],
+                "tipo": row[3]
+            } for row in rows]
+        return []
+    
+    
+    
+    def cadastrar_item_interface(self, nome_item: str, patrimonio: str, local_id: int):
+       
         try:
+            query_nome = "SELECT id_nomes_itens FROM NOMES_ITENS WHERE nomes_itens = %s LIMIT 1;"
+            row_nome = self.db_model._executar_query(query_nome, (nome_item,), fetchone=True)
+    
+            if not row_nome:
+                return {"status": "erro", "mensagem": f"Nome de item '{nome_item}' não encontrado no sistema."}
+    
+            nome_id = row_nome[0]
+        
             novo_item = item_model(
-                id_produto=None, 
+                id_produto=None,
                 nome_produto=nome_id,
-                numero_patrimonio=patrimonio, 
-                categoria_produto=None, 
+                numero_patrimonio=patrimonio,
+                categoria_produto=None,
                 localizacao_produto=local_id, 
-                status_produto=None 
+                status_produto=None
             )
-            
+    
             if self.db_model.inserir_produto(novo_item):
-                self.view.mostrar_mensagem(f"Item com Patrimônio '{patrimonio}' cadastrado com sucesso!")
+                return {
+                    "status": "sucesso", 
+                    "mensagem": f"Item '{nome_item}' com patrimônio '{patrimonio}' cadastrado com sucesso!"
+                }
             else:
-                self.view.mostrar_mensagem(f"❌ Erro ao cadastrar item. Transação desfeita.")
+                return {
+                    "status": "erro", 
+                    "mensagem": "Falha ao cadastrar item. O patrimônio pode já estar em uso."
+                }
+        
         except Exception as e:
-            self.view.mostrar_mensagem(f"❌ Erro na operação de cadastro: {e}")
-
+            return {"status": "erro", "mensagem": f"Erro ao cadastrar: {str(e)}"}
+    
+   
+    
     def realizar_emprestimo(self, patrimonio: str, usuario_id: int):
         item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
         
@@ -86,7 +130,10 @@ class AppController:
             return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
         
         if item_obj.status != 'DISPONÍVEL': 
-            return {"status": "erro", "mensagem": f"Item '{patrimonio}' não está disponível para empréstimo (status: {item_obj.status})."}, 400
+            return {
+                "status": "erro", 
+                "mensagem": f"Item '{patrimonio}' não está disponível para empréstimo (status: {item_obj.status})."
+            }, 400
             
         id_local_emprestimo = 3 
         dias_previstos = 7 
@@ -118,8 +165,13 @@ class AppController:
         if sucesso:
             return {"status": "sucesso", "mensagem": f"Item {patrimonio} devolvido e status atualizado."}
         else:
-            return {"status": "erro", "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."}
+            return {
+                "status": "erro", 
+                "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
+            }
 
+ 
+    
     def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
         if not nome or not matricula or not senha_texto_puro:
             return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}
@@ -138,54 +190,6 @@ class AppController:
         else:
             return {"status": "erro", "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."}
 
-    def finalizar_app(self):
-        self.running = False
-        if self.db_conn:
-            try:
-                self.db_conn.close()
-                print("Conexão com DB fechada")
-            except Exception as e:
-                print("Erro ao fechar conexão:{e}")
-
-        self.view.mostrar_mensagem("Aplicação encerrada. Conexão com o DB fechada.")
-
-    def obter_item_por_patrimonio(self, patrimonio):
-        return self.db_model.obter_item_por_patrimonio(patrimonio)
-    
-    def obter_nomes_itens(self):
-        query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
-        rows = self.db_model._executar_query(query)
-        return [row[0] for row in rows] if rows else []
-
-    def obter_locais(self):
-        query = "SELECT CONCAT(numero_sala, ' - ', nome_estrutura, ' (', numero_posicao, ')') FROM LOCAIS ORDER BY numero_sala;"
-        rows = self.db_model._executar_query(query)
-        return [row[0] for row in rows] if rows else []
-
-    def obter_lista_usuarios(self):
-        query = """
-        SELECT 
-            u.id_usuarios, 
-            u.nomes_usuarios,
-            jucp.id_juncao_usuario_cp,
-            np.nomes_permissoes
-        FROM 
-            USUARIOS u
-        JOIN JUNCAO_USUARIOS_CP jucp ON u.id_usuarios = jucp.id_usuarios
-        JOIN JUNCAO_CARGOS_PERMISSOES jcp ON jucp.id_juncao_cargos_permissoes = jcp.id_juncao_cargos_permissoes
-        JOIN NIVEL_PERMISSOES np ON jcp.id_nivel_permissoes = np.id_nivel_permissoes;
-        """
-        rows = self.db_model._executar_query(query)
-        
-        if rows:
-            return [{
-                "id": row[0],
-                "nome": row[1],
-                "matricula": row[2],
-                "tipo": row[3]
-            } for row in rows]
-        return []
-    
     def obter_relatorio_status(self):
         query = """
         SELECT s.nomes_status, COUNT(i.id_itens) 
@@ -199,6 +203,18 @@ class AppController:
     def obter_historico_movimentacoes(self):
         dados_historico = historico.carregar_dados()
         return dados_historico.get('eventos', [])
+
+  
+    def finalizar_app(self):
+        self.running = False
+        if self.db_conn:
+            try:
+                self.db_conn.close()
+                print("Conexão com DB fechada")
+            except Exception as e:
+                print(f"Erro ao fechar conexão: {e}")
+
+        self.view.mostrar_mensagem("Aplicação encerrada. Conexão com o DB fechada.")
 
 
 class inventarioController:

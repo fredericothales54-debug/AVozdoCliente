@@ -114,7 +114,15 @@
                 "patrimonio": "000013",
                 "item_nome": "Notebook Core i3"
             }
+        },
+        {
+            "ts": "2025-12-05T23:36:42.896062",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000821",
+                "item_nome": "Resma de Papel A4"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-05T18:29:16.544060"
+    "ultima_atualizacao": "2025-12-05T23:36:42.896070"
 }
