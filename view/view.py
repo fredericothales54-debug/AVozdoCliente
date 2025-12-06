@@ -13,7 +13,7 @@ def agora_str():
 def login_required(func):
     def wrapper(self, *args, **kwargs):
         if self.usuario_logado is None:
-            messagebox.showerror("Acesso Negado", "Você deve estar logado para acessar esta função.")
+            messagebox.showerror("Acesso Negado", "Você deve estar logado.")
             return
         return func(self, *args, **kwargs)
     return wrapper
@@ -63,13 +63,13 @@ class AppView:
         user = self.entry_user.get().strip()
         senha = self.entry_pass.get().strip()
 
-        sucesso, resposta = self.controller.fazer_login(user, senha)
+        ok, resp = self.controller.fazer_login(user, senha)
 
-        if sucesso:
-            self.usuario_logado = resposta 
+        if ok:
+            self.usuario_logado = resp 
             self.abrir_menu()
         else:
-            messagebox.showerror("Erro de Login", resposta)
+            messagebox.showerror("Erro de Login", resp)
 
     def abrir_menu(self):
         self.login_win.withdraw()
@@ -116,7 +116,7 @@ class AppView:
         try:
             self.controller.finalizar_app() 
         except Exception as e:
-            print("Erro ao finalizar controller")
+            print("erro finalizar")
         try:
             if self.menu_win and self.menu_win.winfo_exists():
                 self.menu_win.destroy()
@@ -138,7 +138,7 @@ class AppView:
         self.limpar_frame(parent)
         ttk.Label(parent, text="CATEGORIAS DE PRODUTOS", font=("Arial", 16, "bold"), background="white").pack(pady=10)
         
-        categorias = self.controller.obter_categorias()
+        cats = self.controller.obter_categorias()
         
         frm_list = tk.Frame(parent, bg="white")
         frm_list.pack(fill="both", expand=True)
@@ -146,8 +146,8 @@ class AppView:
         listbox = tk.Listbox(frm_list, height=15, font=("Arial", 12))
         listbox.pack(side="left", fill="both", expand=True, padx=10, pady=10)
         
-        for categoria_obj in categorias: 
-            listbox.insert(tk.END, categoria_obj['nome']) 
+        for cat_obj in cats: 
+            listbox.insert(tk.END, cat_obj['nome']) 
             
         def abrir_cat():
             sel = listbox.curselection()
@@ -210,12 +210,12 @@ class AppView:
                 return
             sel = tree.selection()
             if not sel: 
-                messagebox.showwarning("Seleção", "Selecione um item para requisitar.")
+                messagebox.showwarning("Seleção", "Selecione um item.")
                 return
-            patrimonio = sel[0] 
+            pat = sel[0] 
             
             resultado, _ = self.controller.realizar_emprestimo(
-                patrimonio, 
+                pat, 
                 self.usuario_logado.id 
             )
             
@@ -223,7 +223,7 @@ class AppView:
                 messagebox.showinfo("Sucesso", resultado['mensagem'])
                 carregar_treeview() 
             else:
-                messagebox.showerror("Erro de Empréstimo", resultado['mensagem'])
+                messagebox.showerror("Erro", resultado['mensagem'])
             
         def devolver_exemplar():
             tree = tree_container['tree']
@@ -231,11 +231,11 @@ class AppView:
                 return
             sel = tree.selection()
             if not sel: 
-                messagebox.showwarning("Seleção", "Selecione um item para devolver.")
+                messagebox.showwarning("Seleção", "Selecione um item.")
                 return
-            patrimonio = sel[0]
+            pat = sel[0]
 
-            resultado = self.controller.gerenciar_devolucao(patrimonio)
+            resultado = self.controller.gerenciar_devolucao(pat)
 
             if resultado['status'] == 'sucesso':
                 messagebox.showinfo("Sucesso", resultado['mensagem'])
@@ -245,7 +245,7 @@ class AppView:
         
         def excluir_item():
             if self.usuario_logado.nome not in ("TI"):
-                messagebox.showerror("Acesso Negado", "Apenas usuários TI podem excluir itens.")
+                messagebox.showerror("Acesso Negado", "Só TI pode excluir.")
                 return
             
             tree = tree_container['tree']
@@ -253,20 +253,20 @@ class AppView:
                 return
             sel = tree.selection()
             if not sel:
-                messagebox.showwarning("Seleção", "Selecione um item para excluir.")
+                messagebox.showwarning("Seleção", "Selecione um item.")
                 return
             
-            patrimonio = sel[0]
+            pat = sel[0]
             
-            confirmacao = messagebox.askyesno(
+            conf = messagebox.askyesno(
                 "Confirmar Exclusão",
-                f"Tem certeza que deseja EXCLUIR PERMANENTEMENTE o item:\n\nPatrimônio: {patrimonio}\n\nEsta ação não pode ser desfeita!"
+                f"Excluir item?\n\nPatrimônio: {pat}\n\nNão tem volta!"
             )
             
-            if not confirmacao:
+            if not conf:
                 return
             
-            resultado = self.controller.excluir_produto_controller(patrimonio)
+            resultado = self.controller.excluir_produto_controller(pat)
             
             if resultado['status'] == 'sucesso':
                 messagebox.showinfo("Sucesso", resultado['mensagem'])
@@ -281,28 +281,28 @@ class AppView:
         ttk.Button(action_frm, text="Devolver Item", command=devolver_exemplar).pack(side="left", padx=10)
         
         if self.usuario_logado.nome in ("TI"):
-            ttk.Button(action_frm, text=" Excluir Item", command=excluir_item).pack(side="left", padx=10)
+            ttk.Button(action_frm, text=" Excluir", command=excluir_item).pack(side="left", padx=10)
         
-        ttk.Button(action_frm, text="Voltar para Categorias", command=lambda: self.tela_categorias(parent)).pack(side="left", padx=10)
+        ttk.Button(action_frm, text="Voltar", command=lambda: self.tela_categorias(parent)).pack(side="left", padx=10)
     
     @login_required
     def tela_relatorios(self, parent):
         self.limpar_frame(parent)
         ttk.Label(parent, text="RELATÓRIOS DO INVENTÁRIO", font=("Arial", 16, "bold"), background="white").pack(pady=10)
 
-        dados_itens_status = self.controller.obter_relatorio_status()
+        dados = self.controller.obter_relatorio_status()
         
-        if not dados_itens_status:
-             ttk.Label(parent, text="Nenhum dado de inventário para exibir.", background="white").pack(pady=20)
+        if not dados:
+             ttk.Label(parent, text="Sem dados.", background="white").pack(pady=20)
              return
              
-        self.relatorio_itens_pizza(parent, dados_itens_status)
+        self.relatorio_itens_pizza(parent, dados)
 
-    def relatorio_itens_pizza(self, parent, dados_status):
+    def relatorio_itens_pizza(self, parent, dados):
         fig, ax = plt.subplots(figsize=(10, 7))
         
-        labels = list(dados_status.keys())
-        sizes = list(dados_status.values())
+        labels = list(dados.keys())
+        sizes = list(dados.values())
         
         cores_map = {
             'DISPONÍVEL': '#4CAF50',
@@ -313,10 +313,10 @@ class AppView:
             'DESCARTADO': '#607D8B'
         }
         
-        cores_usadas = [cores_map.get(label, '#999999') for label in labels]
+        cores = [cores_map.get(l, '#999999') for l in labels]
         
-        def formato_label(pct, allvals):
-            absolute = int(round(pct/100.*sum(allvals)))
+        def fmt(pct, vals):
+            absolute = int(round(pct/100.*sum(vals)))
             return f'{pct:.1f}%\n({absolute:,})'
         
         explode = [0.05 if (size/sum(sizes))*100 < 5 else 0 for size in sizes]
@@ -324,9 +324,9 @@ class AppView:
         wedges, texts, autotexts = ax.pie(
             sizes, 
             labels=labels,
-            autopct=lambda pct: formato_label(pct, sizes),
+            autopct=lambda pct: fmt(pct, sizes),
             startangle=90,
-            colors=cores_usadas,
+            colors=cores,
             explode=explode,
             shadow=True,
             wedgeprops={'edgecolor': 'white', 'linewidth': 2}
@@ -351,8 +351,8 @@ class AppView:
         
         ax.legend(
             wedges, 
-            [f'{label}: {size:,} itens' for label, size in zip(labels, sizes)],
-            title="Status do Inventário",
+            [f'{l}: {s:,} itens' for l, s in zip(labels, sizes)],
+            title="Status",
             loc="center left",
             bbox_to_anchor=(1, 0, 0.5, 1),
             fontsize=10,
@@ -371,10 +371,10 @@ class AppView:
         self.limpar_frame(parent)
         ttk.Label(parent, text="HISTÓRICO DE MOVIMENTAÇÕES", font=("Arial", 16, "bold"), background="white").pack(pady=10)
 
-        movimentacoes = self.controller.obter_historico_movimentacoes()
+        movs = self.controller.obter_historico_movimentacoes()
         
-        if not movimentacoes:
-             ttk.Label(parent, text="Nenhuma movimentação registrada.", background="white").pack(pady=20)
+        if not movs:
+             ttk.Label(parent, text="Sem movimentações.", background="white").pack(pady=20)
              return
 
         cols = ("timestamp", "tipo", "patrimonio", "item", "usuario")
@@ -394,31 +394,31 @@ class AppView:
         
         tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        for mov in movimentacoes:
-            detalhes_dict = mov.get("detalhes", {})
+        for mov in movs:
+            det = mov.get("detalhes", {})
             
-            if isinstance(detalhes_dict, dict):
-                patrimonio = detalhes_dict.get("patrimonio", "N/A")
-                item_nome = detalhes_dict.get("item_nome", "N/A")
-                usuario_acao = detalhes_dict.get("usuario", "Sistema")
+            if isinstance(det, dict):
+                pat = det.get("patrimonio", "N/A")
+                item_nome = det.get("item_nome", "N/A")
+                usr = det.get("usuario", "Sistema")
             else:
-                patrimonio = "N/A"
-                item_nome = str(detalhes_dict)
-                usuario_acao = "Sistema"
+                pat = "N/A"
+                item_nome = str(det)
+                usr = "Sistema"
             
             tree.insert("", tk.END, values=(
                 mov["ts"], 
                 mov["tipo"], 
-                patrimonio,
+                pat,
                 item_nome,
-                usuario_acao
+                usr
             ))
             
     @login_required
     def tela_cadastro_item(self, parent):
         self.limpar_frame(parent)
         if self.usuario_logado.nome not in ("TI"):
-            messagebox.showerror("Acesso", "Permissão negada.")
+            messagebox.showerror("Acesso", "Sem permissão.")
             return
 
         ttk.Label(parent, text="CADASTRO DE NOVO ITEM", font=("Arial", 16, "bold"), background="white").pack(pady=10)
@@ -426,61 +426,61 @@ class AppView:
         form_frame = tk.Frame(parent, bg="white", padx=20, pady=20)
         form_frame.pack(pady=10)
 
-        nomes_itens_disponiveis = self.controller.obter_nomes_itens()
+        nomes = self.controller.obter_nomes_itens()
         locais_dados = self.controller.obter_locais()
         
         locais_map = {loc['descricao']: loc['id'] for loc in locais_dados}
-        locais_descricoes = list(locais_map.keys())
+        locais_desc = list(locais_map.keys())
         
-        nome_item_var = tk.StringVar()
-        patrimonio_var = tk.StringVar()
+        nome_var = tk.StringVar()
+        pat_var = tk.StringVar()
         local_var = tk.StringVar()
         
-        def criar_item():
-            nome = nome_item_var.get()
-            patrimonio = patrimonio_var.get().strip()
-            local_descricao = local_var.get()
+        def criar():
+            nome = nome_var.get()
+            pat = pat_var.get().strip()
+            local_desc = local_var.get()
     
-            if not nome or not patrimonio or not local_descricao:
-                messagebox.showwarning("Aviso", "Preencha todos os campos.")
+            if not nome or not pat or not local_desc:
+                messagebox.showwarning("Aviso", "Preencha tudo.")
                 return
 
-            local_id = locais_map.get(local_descricao)
+            local_id = locais_map.get(local_desc)
             
             if not local_id:
-                messagebox.showerror("Erro", "Local inválido selecionado.")
+                messagebox.showerror("Erro", "Local inválido.")
                 return
     
-            resultado = self.controller.cadastrar_item_interface(nome, patrimonio, local_id)
+            resultado = self.controller.cadastrar_item_interface(nome, pat, local_id)
     
             if resultado['status'] == 'sucesso':
                 messagebox.showinfo("Sucesso", resultado['mensagem'])
-                nome_item_var.set('')
-                patrimonio_var.set('')
+                nome_var.set('')
+                pat_var.set('')
                 local_var.set('')
             else:
                 messagebox.showerror("Erro", resultado['mensagem'])
 
         row = 0
-        tk.Label(form_frame, text="Nome/Tipo do Item:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-        ttk.Combobox(form_frame, textvariable=nome_item_var, values=nomes_itens_disponiveis, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        tk.Label(form_frame, text="Nome/Tipo:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        ttk.Combobox(form_frame, textvariable=nome_var, values=nomes, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         
         row += 1
         tk.Label(form_frame, text="Nº Patrimônio:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-        ttk.Entry(form_frame, textvariable=patrimonio_var).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        ttk.Entry(form_frame, textvariable=pat_var).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
 
         row += 1
-        tk.Label(form_frame, text="Local Inicial:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-        ttk.Combobox(form_frame, textvariable=local_var, values=locais_descricoes, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        tk.Label(form_frame, text="Local:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        ttk.Combobox(form_frame, textvariable=local_var, values=locais_desc, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         
         row += 1
-        ttk.Button(form_frame, text="Cadastrar Item", command=criar_item).grid(row=row, column=0, columnspan=2, pady=20)
+        ttk.Button(form_frame, text="Cadastrar", command=criar).grid(row=row, column=0, columnspan=2, pady=20)
     
     @login_required
     def tela_usuarios(self, parent):
         self.limpar_frame(parent)
         if self.usuario_logado.nome not in ("TI"):
-            messagebox.showerror("Acesso", "Permissão negada.")
+            messagebox.showerror("Acesso", "Sem permissão.")
             return
 
         ttk.Label(parent, text="GERENCIAMENTO DE USUÁRIOS", font=("Arial", 16, "bold"), background="white").pack(pady=10)
@@ -488,7 +488,7 @@ class AppView:
         usuarios = self.controller.obter_lista_usuarios()
         
         if not usuarios:
-            ttk.Label(parent, text="Nenhum usuário cadastrado.", background="white").pack(pady=20)
+            ttk.Label(parent, text="Sem usuários.", background="white").pack(pady=20)
             return
 
         cols = ("id", "nome", "matricula", "tipo")
@@ -496,7 +496,7 @@ class AppView:
         
         tree.heading("id", text="ID")
         tree.heading("nome", text="Nome")
-        tree.heading("matricula", text="Matrícula/Usuário")
+        tree.heading("matricula", text="Matrícula")
         tree.heading("tipo", text="Permissão")
         
         tree.column("id", width=50, anchor="center")
@@ -509,22 +509,22 @@ class AppView:
         for u in usuarios:
             tree.insert("", tk.END, values=(u["id"], u["nome"], u["matricula"], u["tipo"]))
 
-        def criar_u():
-            nome = simpledialog.askstring("Criar Usuário", "Digite o nome completo:")
+        def criar():
+            nome = simpledialog.askstring("Criar", "Nome completo:")
             if not nome:
                 return
                 
-            matricula = simpledialog.askstring("Criar Usuário", "Digite a matrícula (Usuário):")
-            if not matricula:
+            mat = simpledialog.askstring("Criar", "Matrícula:")
+            if not mat:
                 return
                 
-            senha = simpledialog.askstring("Criar Usuário", "Digite a senha (texto puro):", show='*')
+            senha = simpledialog.askstring("Criar", "Senha:", show='*')
             if not senha:
                 return
             
             resultado = self.controller.cadastrar_novo_usuario_controller(
                 nome=nome, 
-                matricula=matricula, 
+                matricula=mat, 
                 senha_texto_puro=senha
             )
             
@@ -534,39 +534,39 @@ class AppView:
             else:
                 messagebox.showerror("Erro", resultado['mensagem'])
         
-        def excluir_u():
+        def excluir():
             sel = tree.selection()
             if not sel:
-                messagebox.showwarning("Seleção", "Selecione um usuário para excluir.")
+                messagebox.showwarning("Seleção", "Selecione um usuário.")
                 return
             
-            item_selecionado = tree.item(sel[0])
-            valores = item_selecionado['values']
-            usuario_id = valores[0]
-            nome_usuario = valores[1]
+            item = tree.item(sel[0])
+            vals = item['values']
+            user_id = vals[0]
+            nome = vals[1]
             
-            if nome_usuario == "TI":
-                messagebox.showerror("Erro", "Não é possível excluir o usuário TI do sistema.")
+            if nome == "TI":
+                messagebox.showerror("Erro", "Não pode apagar TI.")
                 return
             
-            itens_emprestados = self.controller.verificar_itens_emprestados_usuario(usuario_id)
+            itens_emp = self.controller.verificar_itens_emprestados_usuario(user_id)
             
-            if itens_emprestados > 0:
+            if itens_emp > 0:
                 messagebox.showerror(
                     "Erro", 
-                    f"O usuário '{nome_usuario}' possui {itens_emprestados} item(ns) emprestado(s).\n\nDevolvam os itens antes de excluir o usuário."
+                    f"Usuario '{nome}' tem {itens_emp} item(ns) emprestado(s)."
                 )
                 return
             
-            confirmacao = messagebox.askyesno(
-                "Confirmar Exclusão",
-                f"Tem certeza que deseja EXCLUIR o usuário:\n\n{nome_usuario}\n\nEsta ação não pode ser desfeita!"
+            conf = messagebox.askyesno(
+                "Confirmar",
+                f"Excluir usuário:\n\n{nome}\n\nNão tem volta!"
             )
             
-            if not confirmacao:
+            if not conf:
                 return
             
-            resultado = self.controller.excluir_usuario_controller(usuario_id, nome_usuario)
+            resultado = self.controller.excluir_usuario_controller(user_id, nome)
             
             if resultado['status'] == 'sucesso':
                 messagebox.showinfo("Sucesso", resultado['mensagem'])
@@ -576,5 +576,5 @@ class AppView:
                     
         btn_frm = tk.Frame(parent, bg="white")
         btn_frm.pack(pady=10)
-        ttk.Button(btn_frm, text=" Cadastrar Novo Usuário", command=criar_u).pack(side="left", padx=10)
-        ttk.Button(btn_frm, text=" Excluir Usuário", command=excluir_u).pack(side="left", padx=10)
+        ttk.Button(btn_frm, text="➕ Cadastrar", command=criar).pack(side="left", padx=10)
+        ttk.Button(btn_frm, text=" Excluir", command=excluir).pack(side="left", padx=10)

@@ -12,54 +12,54 @@ class AppController:
         self.running = True
         
     def fazer_login(self, matricula: str, senha_digitada: str):
-        dados_usuario = self.db_model.autenticar_usuario(matricula) 
+        dados = self.db_model.autenticar_usuario(matricula) 
 
-        if dados_usuario is None:
+        if dados is None:
             return False, "Matrícula não encontrada."
 
-        senha_armazenada = dados_usuario[2]
+        senha_db = dados[2]
 
-        if senha_digitada == senha_armazenada: 
-            usuario_logado = usuario_model(dados_usuario[0], dados_usuario[1], dados_usuario[2])
-            return True, usuario_logado 
+        if senha_digitada == senha_db: 
+            usr = usuario_model(dados[0], dados[1], dados[2])
+            return True, usr 
         else:
             return False, "Senha incorreta."
     
     def obter_categorias(self):
         return self.db_model.listar_todas_categorias()
         
-    def listar_exemplares_por_categoria(self, nome_categoria: str):
+    def listar_exemplares_por_categoria(self, nome_cat: str):
         try:
-            exemplares_db = self.db_model.listar_exemplares_por_categoria_db(nome_categoria) 
-            return exemplares_db 
+            ex = self.db_model.listar_exemplares_por_categoria_db(nome_cat) 
+            return ex 
         except Exception as e:
-            print(f"❌ Erro no Controller ao listar exemplares por categoria: {e}")
+            print(f"erro listar exemplares: {e}")
             return []
     
-    def obter_item_por_patrimonio(self, patrimonio):
-        return self.db_model.obter_item_por_patrimonio(patrimonio)
+    def obter_item_por_patrimonio(self, pat):
+        return self.db_model.obter_item_por_patrimonio(pat)
     
     def obter_nomes_itens(self):
-        query = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
-        rows = self.db_model._executar_query(query)
-        return [row[0] for row in rows] if rows else []
+        q = "SELECT nomes_itens FROM NOMES_ITENS ORDER BY nomes_itens;"
+        r = self.db_model._executar_query(q)
+        return [row[0] for row in r] if r else []
 
     def obter_locais(self):
-        query = """
+        q = """
             SELECT 
                 id_locais,
                 CONCAT(numero_sala, ' - ', nome_estrutura, ' - Pos. ', numero_posicao) 
             FROM LOCAIS 
             ORDER BY numero_sala;
         """
-        rows = self.db_model._executar_query(query)
+        r = self.db_model._executar_query(q)
         
-        if rows:
-            return [{'id': row[0], 'descricao': row[1]} for row in rows]
+        if r:
+            return [{'id': row[0], 'descricao': row[1]} for row in r]
         return []
 
     def obter_lista_usuarios(self):
-        query = """
+        q = """
         SELECT 
             u.id_usuarios, 
             u.nomes_usuarios,
@@ -71,212 +71,210 @@ class AppController:
         JOIN JUNCAO_CARGOS_PERMISSOES jcp ON jucp.id_juncao_cargos_permissoes = jcp.id_juncao_cargos_permissoes
         JOIN NIVEL_PERMISSOES np ON jcp.id_nivel_permissoes = np.id_nivel_permissoes;
         """
-        rows = self.db_model._executar_query(query)
+        r = self.db_model._executar_query(q)
         
-        if rows:
+        if r:
             return [{
                 "id": row[0],
                 "nome": row[1],
                 "matricula": row[2],
                 "tipo": row[3]
-            } for row in rows]
+            } for row in r]
         return []
     
-    def cadastrar_item_interface(self, nome_item: str, patrimonio: str, local_id: int):
+    def cadastrar_item_interface(self, nome_item: str, pat: str, local_id: int):
         try:
-            query_nome = "SELECT id_nomes_itens FROM NOMES_ITENS WHERE nomes_itens = %s LIMIT 1;"
-            row_nome = self.db_model._executar_query(query_nome, (nome_item,), fetchone=True)
+            q = "SELECT id_nomes_itens FROM NOMES_ITENS WHERE nomes_itens = %s LIMIT 1;"
+            r = self.db_model._executar_query(q, (nome_item,), fetchone=True)
     
-            if not row_nome:
-                return {"status": "erro", "mensagem": f"Nome de item '{nome_item}' não encontrado no sistema."}
+            if not r:
+                return {"status": "erro", "mensagem": f"Nome '{nome_item}' nao existe."}
     
-            nome_id = row_nome[0]
+            nome_id = r[0]
         
-            novo_item = item_model(
+            item_novo = item_model(
                 id_produto=None,
                 nome_produto=nome_id,
-                numero_patrimonio=patrimonio,
+                numero_patrimonio=pat,
                 categoria_produto=None,
                 localizacao_produto=local_id, 
                 status_produto=None
             )
     
-            if self.db_model.inserir_produto(novo_item):
+            if self.db_model.inserir_produto(item_novo):
                 return {
                     "status": "sucesso", 
-                    "mensagem": f"Item '{nome_item}' com patrimônio '{patrimonio}' cadastrado com sucesso!"
+                    "mensagem": f"Item '{nome_item}' patrimonio '{pat}' cadastrado!"
                 }
             else:
                 return {
                     "status": "erro", 
-                    "mensagem": "Falha ao cadastrar item. O patrimônio pode já estar em uso."
+                    "mensagem": "Falhou. Patrimonio ja existe?"
                 }
         
         except Exception as e:
-            return {"status": "erro", "mensagem": f"Erro ao cadastrar: {str(e)}"}
+            return {"status": "erro", "mensagem": f"Erro: {str(e)}"}
     
-    def realizar_emprestimo(self, patrimonio: str, usuario_id: int):
-        item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
+    def realizar_emprestimo(self, pat: str, user_id: int):
+        item = self.db_model.obter_item_por_patrimonio(pat)
         
-        if not item_obj:
-            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}, 404
+        if not item:
+            return {"status": "erro", "mensagem": f"Item '{pat}' nao achado."}, 404
         
-        if item_obj.status != 'DISPONÍVEL': 
+        if item.status != 'DISPONÍVEL': 
             return {
                 "status": "erro", 
-                "mensagem": f"Item '{patrimonio}' não está disponível para empréstimo (status: {item_obj.status})."
+                "mensagem": f"Item '{pat}' nao disponivel (status: {item.status})."
             }, 400
             
-        id_local_emprestimo = 3 
-        dias_previstos = 7 
+        local_emp = 3 
+        dias = 7 
         
-        sucesso = self.db_model.emprestar_item(
-            item_id=item_obj.id,
-            usuario_id=usuario_id, 
-            id_local_emprestimo=id_local_emprestimo, 
-            dias_previstos=dias_previstos
+        ok = self.db_model.emprestar_item(
+            item_id=item.id,
+            usuario_id=user_id, 
+            id_local_emprestimo=local_emp, 
+            dias_previstos=dias
         )
         
-        if sucesso:
-            nome_usuario = self.db_model._obter_nome_usuario_por_id(usuario_id)
+        if ok:
+            nome = self.db_model._obter_nome_usuario_por_id(user_id)
             
             self.historico.registrar_historico("EMPRÉSTIMO", {
-                "patrimonio": patrimonio,
-                "item_nome": item_obj.nome,
-                "usuario": nome_usuario
+                "patrimonio": pat,
+                "item_nome": item.nome,
+                "usuario": nome
             })
-            return {"status": "sucesso", "mensagem": f"Item {patrimonio} emprestado com sucesso."}, 200
+            return {"status": "sucesso", "mensagem": f"Item {pat} emprestado!"}, 200
         else:
-            return {"status": "erro", "mensagem": f"Não foi possível processar o empréstimo do item {patrimonio}."}, 500
+            return {"status": "erro", "mensagem": f"Nao deu pra emprestar {pat}."}, 500
 
-    def gerenciar_devolucao(self, patrimonio: str):
-        item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
+    def gerenciar_devolucao(self, pat: str):
+        item = self.db_model.obter_item_por_patrimonio(pat)
     
-        if not item_obj:
-            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}
+        if not item:
+            return {"status": "erro", "mensagem": f"Item '{pat}' nao achado."}
     
-        if item_obj.status not in ['EMPRESTADO', 'EM USO']:
+        if item.status not in ['EMPRESTADO', 'EM USO']:
             return {
             "status": "erro", 
-            "mensagem": f"Item '{patrimonio}' não pode ser devolvido. Status atual: {item_obj.status}"
+            "mensagem": f"Item '{pat}' nao pode devolver. Status: {item.status}"
             }
     
-        item_id = item_obj.id
+        ok = self.db_model.devolucao_item(item.id)
     
-        sucesso = self.db_model.devolucao_item(item_id)
-    
-        if sucesso:
-            nome_usuario = self.view.usuario_logado.nome if self.view.usuario_logado else "Sistema"
+        if ok:
+            nome = self.view.usuario_logado.nome if self.view.usuario_logado else "Sistema"
             
             self.historico.registrar_historico("DEVOLUÇÃO", {
-                "patrimonio": patrimonio,
-                "item_nome": item_obj.nome,
-                "usuario": nome_usuario
+                "patrimonio": pat,
+                "item_nome": item.nome,
+                "usuario": nome
             })
             
-            return {"status": "sucesso", "mensagem": f"Item {patrimonio} devolvido e status atualizado."}
+            return {"status": "sucesso", "mensagem": f"Item {pat} devolvido!"}
         else:
             return {
                 "status": "erro", 
-                "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
+                "mensagem": f"Nao deu pra devolver {pat}."
             }
  
-    def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
-        if not nome or not matricula or not senha_texto_puro:
-            return {"status": "erro", "mensagem": "Todos os campos (nome, matrícula, senha) são obrigatórios."}
+    def cadastrar_novo_usuario_controller(self, nome: str, mat: str, senha: str):
+        if not nome or not mat or not senha:
+            return {"status": "erro", "mensagem": "Preencha tudo."}
             
-        novo_usuario_obj = usuario_model(
+        usr_novo = usuario_model(
             id_usuarios=None,
-            nomes_usuarios=matricula, 
-            senhas_usuarios=senha_texto_puro
+            nomes_usuarios=mat, 
+            senhas_usuarios=senha
         )
-        setattr(novo_usuario_obj, 'nome', nome) 
+        setattr(usr_novo, 'nome', nome) 
         
-        sucesso = self.db_model.cadastrar_usuario(novo_usuario_obj)
+        ok = self.db_model.cadastrar_usuario(usr_novo)
 
-        if sucesso:
-            return {"status": "sucesso", "mensagem": f"Usuário {nome} ({matricula}) cadastrado com sucesso!"}
+        if ok:
+            return {"status": "sucesso", "mensagem": f"Usuario {nome} ({mat}) cadastrado!"}
         else:
-            return {"status": "erro", "mensagem": f"Falha ao cadastrar usuário. A matrícula {matricula} pode já estar em uso."}
+            return {"status": "erro", "mensagem": f"Falhou. Matricula {mat} ja existe?"}
 
-    def excluir_produto_controller(self, patrimonio: str):
-        if not patrimonio:
-            return {"status": "erro", "mensagem": "Patrimônio não informado."}
+    def excluir_produto_controller(self, pat: str):
+        if not pat:
+            return {"status": "erro", "mensagem": "Sem patrimonio."}
         
-        item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
+        item = self.db_model.obter_item_por_patrimonio(pat)
         
-        if not item_obj:
-            return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}
+        if not item:
+            return {"status": "erro", "mensagem": f"Item '{pat}' nao existe."}
         
-        if item_obj.status == 'EMPRESTADO':
-            return {"status": "erro", "mensagem": f"Não é possível excluir o item '{patrimonio}' pois está EMPRESTADO."}
+        if item.status == 'EMPRESTADO':
+            return {"status": "erro", "mensagem": f"Item '{pat}' emprestado, nao da pra apagar."}
         
-        sucesso = self.db_model.deletar_produto(patrimonio)
+        ok = self.db_model.deletar_produto(pat)
         
-        if sucesso:
+        if ok:
             self.historico.registrar_historico("EXCLUSÃO DE ITEM", {
-                "patrimonio": patrimonio,
-                "item_nome": item_obj.nome
+                "patrimonio": pat,
+                "item_nome": item.nome
             })
-            return {"status": "sucesso", "mensagem": f"Item '{patrimonio}' excluído com sucesso!"}
+            return {"status": "sucesso", "mensagem": f"Item '{pat}' apagado!"}
         else:
-            return {"status": "erro", "mensagem": f"Falha ao excluir o item '{patrimonio}'."}
+            return {"status": "erro", "mensagem": f"Falhou apagar '{pat}'."}
     
-    def excluir_usuario_controller(self, usuario_id: int, nome_usuario: str):
-        if not usuario_id:
-            return {"status": "erro", "mensagem": "ID de usuário não informado."}
+    def excluir_usuario_controller(self, user_id: int, nome: str):
+        if not user_id:
+            return {"status": "erro", "mensagem": "Sem ID."}
         
-        if nome_usuario == "TI":
-            return {"status": "erro", "mensagem": "Não é possível excluir o usuário TI do sistema."}
+        if nome == "TI":
+            return {"status": "erro", "mensagem": "Nao da pra apagar TI."}
         
-        sucesso = self.db_model.deletar_usuario(usuario_id)
+        ok = self.db_model.deletar_usuario(user_id)
         
-        if sucesso:
+        if ok:
             self.historico.registrar_historico("EXCLUSÃO DE USUÁRIO", {
-                "usuario_id": usuario_id,
-                "usuario_nome": nome_usuario
+                "usuario_id": user_id,
+                "usuario_nome": nome
             })
-            return {"status": "sucesso", "mensagem": f"Usuário '{nome_usuario}' excluído com sucesso!"}
+            return {"status": "sucesso", "mensagem": f"Usuario '{nome}' apagado!"}
         else:
-            return {"status": "erro", "mensagem": f"Falha ao excluir o usuário '{nome_usuario}'."}
+            return {"status": "erro", "mensagem": f"Falhou apagar '{nome}'."}
     
-    def verificar_itens_emprestados_usuario(self, usuario_id: int):
-        query = """
+    def verificar_itens_emprestados_usuario(self, user_id: int):
+        q = """
             SELECT COUNT(*) 
             FROM MOVIMENTACOES m
             JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
             WHERE jucp.id_usuarios = %s AND m.id_status = 2;
         """
-        row = self.db_model._executar_query(query, (usuario_id,), fetchone=True)
-        return row[0] if row else 0
+        r = self.db_model._executar_query(q, (user_id,), fetchone=True)
+        return r[0] if r else 0
 
     def obter_relatorio_status(self):
-        query = """
+        q = """
         SELECT s.nomes_status, COUNT(i.id_itens) 
         FROM ITENS i
         JOIN STATUS s ON i.id_status = s.id_status
         GROUP BY s.nomes_status;
         """
-        rows = self.db_model._executar_query(query)
-        return dict(rows) if rows else {}
+        r = self.db_model._executar_query(q)
+        return dict(r) if r else {}
 
     def obter_historico_movimentacoes(self):
-        dados_historico = historico.carregar_dados()
-        return dados_historico.get('eventos', [])
+        dados = historico.carregar_dados()
+        return dados.get('eventos', [])
 
     def finalizar_app(self):
         self.running = False
         if self.db_conn:
             try:
                 self.db_conn.close()
-                print("Conexão com DB fechada")
+                print("db fechado")
             except Exception as e:
-                print(f"Erro ao fechar conexão: {e}")
+                print(f"erro fechar: {e}")
 
 
 class inventarioController:
     def __init__(self, db_conn):
         if db_conn is None:
-            raise ValueError("Conexão com o banco de dados não pode ser nula.")
+            raise ValueError("db nao pode ser None")
         self.db_conn = db_conn
         self.db_model = conexaobanco_model(self.db_conn)
