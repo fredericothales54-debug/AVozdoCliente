@@ -384,7 +384,61 @@
                 "item_nome": "Ar-Condicionado 12.000 BTU",
                 "usuario": "TI"
             }
+        },
+        {
+            "ts": "2025-12-06T01:23:30.210323",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004761",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:23:35.542783",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "004761",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:23:53.723868",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "TIAGO"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:24:03.334526",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "TIAGO"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:25:28.290854",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:25:31.458292",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "PEDRO"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-06T00:57:58.216800"
+    "ultima_atualizacao": "2025-12-06T01:25:31.458298"
 }

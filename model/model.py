@@ -273,6 +273,7 @@ class conexaobanco_model:
             """, (usuario_obj.nome, usuario_obj.senha))
         
             id_usuario_novo = cursor.fetchone()[0]
+            print(f"✅ Usuário criado com ID: {id_usuario_novo}")
        
             cursor.execute("""
                 SELECT id_juncao_cargos_permissoes 
@@ -283,17 +284,25 @@ class conexaobanco_model:
         
             row = cursor.fetchone()
             if not row:
+                print("❌ Cargo padrão não encontrado na tabela JUNCAO_CARGOS_PERMISSOES")
                 raise Exception("Cargo padrão não encontrado")
         
             id_juncao_cargos_permissoes_padrao = row[0]
+            print(f"✅ Cargo padrão encontrado: {id_juncao_cargos_permissoes_padrao}")
         
             cursor.execute("""
                 INSERT INTO JUNCAO_USUARIOS_CP(id_usuarios, id_juncao_cargos_permissoes)
-                VALUES(%s, %s);
+                VALUES(%s, %s)
+                RETURNING id_juncao_usuario_cp;
             """, (id_usuario_novo, id_juncao_cargos_permissoes_padrao))
+            
+            id_juncao_novo = cursor.fetchone()[0]
+            print(f"✅ JUNCAO_USUARIOS_CP criado com ID: {id_juncao_novo}")
         
             self.conn.commit()
             cursor.close()
+            
+            print(f"✅ Usuário '{usuario_obj.nome}' cadastrado com sucesso!")
             return True
         
         except Exception as e:
@@ -304,9 +313,13 @@ class conexaobanco_model:
             
     def emprestar_item(self, item_id: int, usuario_id: int, id_local_emprestimo: int, dias_previstos: int = 7):
         id_juncao_usuario_cp = self._obter_juncao_cp(usuario_id)
+        
         if not id_juncao_usuario_cp:
-            print(f"❌ Erro: Não foi encontrado JUNCAO_USUARIOS_CP para o id_usuarios: {usuario_id}")
+            print(f"❌ ERRO CRÍTICO: Não foi encontrado JUNCAO_USUARIOS_CP para o id_usuarios: {usuario_id}")
+            print(f"   Verifique se o usuário foi cadastrado corretamente na tabela JUNCAO_USUARIOS_CP")
             return False
+        
+        print(f"✅ JUNCAO_USUARIOS_CP encontrado: {id_juncao_usuario_cp} para usuário {usuario_id}")
             
         data_emprestimo = datetime.datetime.now()
         
@@ -325,16 +338,19 @@ class conexaobanco_model:
         
         try:
             self._executar_query(query_movimentacao, params_movimentacao, commit=False)
+            print(f"✅ Movimentação registrada para item {item_id}")
+            
             self._executar_query(query_status_item, params_status_item, commit=False)
+            print(f"✅ Status do item {item_id} atualizado para EMPRESTADO")
             
             self.conn.commit()
+            print(f"✅ Empréstimo concluído com sucesso!")
             return True
             
         except Exception as e:
             self.conn.rollback()
             print(f"❌ Erro na transação de empréstimo: {e}")
             return False
-
     def listar_todas_categorias(self):
         
         query = "SELECT id_categorias, nomes_categorias FROM CATEGORIAS ORDER BY nomes_categorias;"
