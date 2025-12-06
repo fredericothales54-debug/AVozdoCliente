@@ -130,7 +130,31 @@
                 "patrimonio": "000015",
                 "item_nome": "Notebook Core i3"
             }
+        },
+        {
+            "ts": "2025-12-06T00:10:22.266818",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000825",
+                "item_nome": "Resma de Papel A4"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:14:02.914679",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000512",
+                "item_nome": "Mesa de Professor"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:14:13.082363",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000516",
+                "item_nome": "Mesa de Professor"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-05T23:59:47.452315"
+    "ultima_atualizacao": "2025-12-06T00:14:13.082369"
 }

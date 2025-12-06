@@ -243,22 +243,44 @@ class conexaobanco_model:
             self.conn.rollback()
             return False
             
-    def cadastrar_usuario(self,usuario_obj):
-        
-        query="""
-            INSERT INTO USUARIOS(
-            nomes_usuarios, senhas_usuarios
-            ) VALUES(%s,%s);
-            """
-        parametros=(
-            usuario_obj.nome,
-            usuario_obj.senha
-            )
+    def cadastrar_usuario(self, usuario_obj):
+        cursor = self.conn.cursor()
+    
         try:
-            self._executar_query(query,parametros,fetchone=False,commit=True)
+            cursor.execute("""
+                INSERT INTO USUARIOS(nomes_usuarios, senhas_usuarios)
+                VALUES(%s, %s)
+                RETURNING id_usuarios;
+            """, (usuario_obj.nome, usuario_obj.senha))
+        
+            id_usuario_novo = cursor.fetchone()[0]
+       
+            cursor.execute("""
+                SELECT id_juncao_cargos_permissoes 
+                FROM JUNCAO_CARGOS_PERMISSOES 
+                WHERE id_cargos = 1 
+                LIMIT 1;
+            """)
+        
+            row = cursor.fetchone()
+            if not row:
+                raise Exception("Cargo padrão não encontrado")
+        
+            id_juncao_cargos_permissoes_padrao = row[0]
+        
+            cursor.execute("""
+                INSERT INTO JUNCAO_USUARIOS_CP(id_usuarios, id_juncao_cargos_permissoes)
+                VALUES(%s, %s);
+            """, (id_usuario_novo, id_juncao_cargos_permissoes_padrao))
+        
+            self.conn.commit()
+            cursor.close()
             return True
+        
         except Exception as e:
             self.conn.rollback()
+            cursor.close()
+            print(f"❌ Erro ao cadastrar usuário: {e}")
             return False
             
     def emprestar_item(self, item_id: int, usuario_id: int, id_local_emprestimo: int, dias_previstos: int = 7):
