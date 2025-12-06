@@ -384,30 +384,34 @@ class conexaobanco_model:
             JOIN NOMES_ITENS ni ON i.id_nomes_itens = ni.id_nomes_itens 
             JOIN STATUS s ON i.id_status = s.id_status
             JOIN CATEGORIAS c ON ni.id_categorias = c.id_categorias
-            LEFT JOIN 
-                (
-                    SELECT DISTINCT ON (m.id_itens) 
-                        m.id_itens, 
-                        jucp.id_usuarios 
-                    FROM MOVIMENTACOES m
-                    JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
-                    ORDER BY m.id_itens, m.data DESC
-                ) AS ultima_mov ON i.id_itens = ultima_mov.id_itens
+            LEFT JOIN LATERAL (
+                SELECT jucp.id_usuarios 
+                FROM MOVIMENTACOES m
+                JOIN JUNCAO_USUARIOS_CP jucp ON m.id_juncao_usuario_cp = jucp.id_juncao_usuario_cp
+                WHERE m.id_itens = i.id_itens 
+                AND m.id_status IN (2, 3)
+                ORDER BY m.data DESC
+                LIMIT 1
+            ) AS ultima_mov ON TRUE
             LEFT JOIN USUARIOS u ON ultima_mov.id_usuarios = u.id_usuarios
             WHERE
                 c.nomes_categorias = %s
             ORDER BY
                 i.numero_patrimonio;
             """
-        
+    
         rows = self._executar_query(query, (nome_categoria,))
-        
+    
         if rows:
             result = []
             for row in rows:
-               
                 status = row[3]
-                nome_posse = row[4] if status == 'EMPRESTADO' else 'Ninguém'
+            
+                if status in ('EMPRESTADO', 'EM USO') and row[4]:
+                    nome_posse = row[4]
+                else:
+                    nome_posse = 'Ninguém'
+                
                 result.append({
                     "id": row[0],
                     "nome": row[1],
@@ -417,7 +421,6 @@ class conexaobanco_model:
                 })
             return result 
         return []
-
 class Historico:
     ARQUIVO = 'historico.json'
 

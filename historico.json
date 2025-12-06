@@ -154,7 +154,39 @@
                 "patrimonio": "000516",
                 "item_nome": "Mesa de Professor"
             }
+        },
+        {
+            "ts": "2025-12-06T00:15:48.330842",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000511",
+                "item_nome": "Mesa de Professor"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:25:33.056232",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004742",
+                "item_nome": "Marcador de Quadro Branco"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:25:43.833221",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000504",
+                "item_nome": "C\u00e2mera de seguran\u00e7a"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:30:11.179000",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000509",
+                "item_nome": "Mesa de Professor"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-06T00:14:13.082369"
+    "ultima_atualizacao": "2025-12-06T00:30:11.179006"
 }
