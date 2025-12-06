@@ -186,7 +186,115 @@
                 "patrimonio": "000509",
                 "item_nome": "Mesa de Professor"
             }
+        },
+        {
+            "ts": "2025-12-06T00:39:41.858170",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000821",
+                "item_nome": "Resma de Papel A4",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:39:45.774388",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000821",
+                "item_nome": "Resma de Papel A4",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:44.854212",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000006",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:48.957485",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000007",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:51.430158",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000008",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:54.334425",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000009",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:56.958967",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000010",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:38.973561",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000006",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:41.460957",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000008",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:44.426679",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000010",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:46.532423",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:49.133036",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000007",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-06T00:30:11.179006"
+    "ultima_atualizacao": "2025-12-06T00:41:49.133042"
 }

@@ -146,39 +146,47 @@ class AppController:
         )
         
         if sucesso:
+            nome_usuario = self.db_model._obter_nome_usuario_por_id(usuario_id)
             self.historico.registrar_historico("EMPRÉSTIMO", {
                 "patrimonio": patrimonio,
                 "item_nome": item_obj.nome,
+                "usuario": nome_usuario
             })
             return {"status": "sucesso", "mensagem": f"Item {patrimonio} emprestado com sucesso."}, 200
         else:
             return {"status": "erro", "mensagem": f"Não foi possível processar o empréstimo do item {patrimonio}."}, 500
 
     def gerenciar_devolucao(self, patrimonio: str):
-    
         item_obj = self.db_model.obter_item_por_patrimonio(patrimonio)
-    
+
         if not item_obj:
             return {"status": "erro", "mensagem": f"Item com patrimônio '{patrimonio}' não encontrado."}
-    
+
         if item_obj.status not in ['EMPRESTADO', 'EM USO']:
             return {
             "status": "erro", 
             "mensagem": f"Item '{patrimonio}' não pode ser devolvido. Status atual: {item_obj.status}"
             }
-    
+
         item_id = item_obj.id
-    
+
         sucesso = self.db_model.devolucao_item(item_id)
-    
+
         if sucesso:
+            nome_usuario = self.view.usuario_logado.nome if self.view.usuario_logado else "Sistema"
+        
+            self.historico.registrar_historico("DEVOLUÇÃO", {
+                "patrimonio": patrimonio,
+                "item_nome": item_obj.nome,
+                "usuario": nome_usuario  
+            })
+        
             return {"status": "sucesso", "mensagem": f"Item {patrimonio} devolvido e status atualizado."}
         else:
             return {
                 "status": "erro", 
                 "mensagem": f"Não foi possível registrar a devolução do item {patrimonio}. Transação desfeita (rollback)."
             }
- 
     
     def cadastrar_novo_usuario_controller(self, nome: str, matricula: str, senha_texto_puro: str):
         if not nome or not matricula or not senha_texto_puro:
