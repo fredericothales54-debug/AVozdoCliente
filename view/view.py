@@ -353,15 +353,15 @@ class AppView:
             return
 
         row = 0
-        ttk.Label(form_frame, text="Nome/Tipo do Item:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        tk.Label(form_frame, text="Nome/Tipo do Item:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         ttk.Combobox(form_frame, textvariable=nome_item_var, values=nomes_itens_disponiveis, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         
         row += 1
-        ttk.Label(form_frame, text="Nº Patrimônio:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        tk.Label(form_frame, text="Nº Patrimônio:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         ttk.Entry(form_frame, textvariable=patrimonio_var).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
 
         row += 1
-        ttk.Label(form_frame, text="Local Inicial:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        tk.Label(form_frame, text="Local Inicial:", bg="white").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         ttk.Combobox(form_frame, textvariable=local_var, values=locais_disponiveis, state="readonly").grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         
         row += 1
