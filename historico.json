@@ -294,7 +294,79 @@
                 "item_nome": "Notebook Core i3",
                 "usuario": "TI"
             }
+        },
+        {
+            "ts": "2025-12-06T00:46:03.407153",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000011",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:08.025589",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000012",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:10.947738",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000013",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:39.268044",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000013",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:42.801544",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000011",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:45.516141",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000012",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:50:14.696049",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000015",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:50:40.275845",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000015",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-06T00:41:49.133042"
+    "ultima_atualizacao": "2025-12-06T00:50:40.275852"
 }

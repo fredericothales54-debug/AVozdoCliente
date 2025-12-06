@@ -262,29 +262,68 @@ class AppView:
         self.relatorio_itens_pizza(parent, dados_itens_status)
 
     def relatorio_itens_pizza(self, parent, dados_status):
-        fig, ax = plt.subplots(figsize=(6, 6))
+        fig, ax = plt.subplots(figsize=(10, 7))
         
-        labels = dados_status.keys()
-        sizes = dados_status.values()
+        labels = list(dados_status.keys())
+        sizes = list(dados_status.values())
         
-        cores = ['#4CAF50', '#FF9800', '#F44336', '#2196F3'] 
+        cores_map = {
+            'DISPONÍVEL': '#4CAF50',
+            'EMPRESTADO': '#FF9800',
+            'EM USO': '#2196F3',
+            'MANUTENÇÃO': '#F44336',
+            'DANIFICADO': '#9C27B0',
+            'DESCARTADO': '#607D8B'
+        }
         
-        cores_usadas = [cores[i % len(cores)] for i in range(len(labels))]
-
+        cores_usadas = [cores_map.get(label, '#999999') for label in labels]
+        
+        def formato_label(pct, allvals):
+            absolute = int(round(pct/100.*sum(allvals)))
+            return f'{pct:.1f}%\n({absolute:,})'
+        
+        explode = [0.05 if (size/sum(sizes))*100 < 5 else 0 for size in sizes]
+        
         wedges, texts, autotexts = ax.pie(
             sizes, 
-            autopct=lambda p: '{:.1f}%\n({:d})'.format(p, int(p * sum(sizes) / 100)),
-            startangle=90, 
+            labels=labels,
+            autopct=lambda pct: formato_label(pct, sizes),
+            startangle=90,
             colors=cores_usadas,
-            wedgeprops={'edgecolor': 'black'}
+            explode=explode,
+            shadow=True,
+            wedgeprops={'edgecolor': 'white', 'linewidth': 2}
         )
         
-        ax.axis('equal') 
-        ax.set_title('Distribuição de Itens por Status', fontsize=14)
-
-        handles = [mpatches.Patch(color=c, label=l) for c, l in zip(cores_usadas, labels)]
-        ax.legend(handles=handles, title="Status", loc="lower left", bbox_to_anchor=(0.9, 0, 0.5, 1))
-
+        for text in texts:
+            text.set_fontsize(11)
+            text.set_fontweight('bold')
+            text.set_color('white')
+        
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontsize(10)
+            autotext.set_fontweight('bold')
+        
+        ax.axis('equal')
+        
+        plt.title('Distribuição de Itens por Status', 
+                  fontsize=16, 
+                  fontweight='bold',
+                  pad=20)
+        
+        ax.legend(
+            wedges, 
+            [f'{label}: {size:,} itens' for label, size in zip(labels, sizes)],
+            title="Status do Inventário",
+            loc="center left",
+            bbox_to_anchor=(1, 0, 0.5, 1),
+            fontsize=10,
+            title_fontsize=12
+        )
+        
+        plt.tight_layout()
+        
         canvas = FigureCanvasTkAgg(fig, master=parent)
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -301,25 +340,42 @@ class AppView:
              ttk.Label(parent, text="Nenhuma movimentação registrada.", background="white").pack(pady=20)
              return
 
-        cols = ("timestamp", "tipo", "detalhes", "usuario")
+        cols = ("timestamp", "tipo", "patrimonio", "item", "usuario")
         tree = ttk.Treeview(parent, columns=cols, show="headings")
         
         tree.heading("timestamp", text="Data/Hora", anchor="center")
-        tree.heading("tipo", text="Tipo de Evento", anchor="center")
-        tree.heading("detalhes", text="Detalhes", anchor="w")
+        tree.heading("tipo", text="Tipo", anchor="center")
+        tree.heading("patrimonio", text="Patrimônio", anchor="center")
+        tree.heading("item", text="Item", anchor="w")
         tree.heading("usuario", text="Usuário", anchor="center")
         
         tree.column("timestamp", width=150, anchor="center")
-        tree.column("tipo", width=120, anchor="center")
-        tree.column("detalhes", width=400)
-        tree.column("usuario", width=100, anchor="center")
+        tree.column("tipo", width=100, anchor="center")
+        tree.column("patrimonio", width=100, anchor="center")
+        tree.column("item", width=300, anchor="w")
+        tree.column("usuario", width=120, anchor="center")
         
         tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         for mov in movimentacoes:
-            detalhes_str = mov.get("detalhes", "")
-            tree.insert("", tk.END, values=(mov["ts"], mov["tipo"], detalhes_str, mov.get("usuario", "Sistema")))
+            detalhes_dict = mov.get("detalhes", {})
             
+            if isinstance(detalhes_dict, dict):
+                patrimonio = detalhes_dict.get("patrimonio", "N/A")
+                item_nome = detalhes_dict.get("item_nome", "N/A")
+                usuario_acao = detalhes_dict.get("usuario", "Sistema")
+            else:
+                patrimonio = "N/A"
+                item_nome = str(detalhes_dict)
+                usuario_acao = "Sistema"
+            
+            tree.insert("", tk.END, values=(
+                mov["ts"], 
+                mov["tipo"], 
+                patrimonio,
+                item_nome,
+                usuario_acao
+            ))
     @login_required
     def tela_cadastro_item(self, parent):
         self.limpar_frame(parent)
