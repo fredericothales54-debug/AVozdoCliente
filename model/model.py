@@ -40,23 +40,42 @@ class conexaobanco_model:
     def __init__(self,conn):
         self.conn = conn
         
-    def _executar_query(self, query, params=None, fetchone=False,commit=False):
+    def _executar_query(self, query, params=None, fetchone=False, commit=False):
+        cursor = None
         try:
-            with self.conn.cursor() as cursor:
-                cursor.execute(query, params)
-                if commit:
-                    self.conn.commit()
-                    return True
-                if fetchone:
-                    return cursor.fetchone()
-                else:
-                    return cursor.fetchall()
-        except Exception as e:
+            cursor = self.conn.cursor()
+            cursor.execute(query, params or ())
+            
             if commit:
+                self.conn.commit()
+                return True
+            
+            query_upper = query.strip().upper()
+            
+            if query_upper.startswith(('INSERT', 'UPDATE', 'DELETE')):
+                if 'RETURNING' in query_upper:
+                    if fetchone:
+                        return cursor.fetchone()
+                    else:
+                        return cursor.fetchall()
+                else:
+                    return True
+            
+            if fetchone:
+                result = cursor.fetchone()
+                return result
+            else:
+                result = cursor.fetchall()
+                return result
+                
+        except Exception as e:
+            if commit and self.conn:
                 self.conn.rollback()
-            print(f" Erro de query: {e}")
-            return None 
-
+            print(f"Erro de query: {e}")
+            return None if fetchone else []
+        finally:
+            if cursor:
+                cursor.close()
     def _obter_juncao_cp(self, id_usuarios: int):
         query = "SELECT id_juncao_usuario_cp FROM JUNCAO_USUARIOS_CP WHERE id_usuarios = %s LIMIT 1;"
         row = self._executar_query(query, (id_usuarios,), fetchone=True)
