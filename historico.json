@@ -1,0 +1,609 @@
+{
+    "eventos": [
+        {
+            "ts": "2025-12-05T16:20:15.468904",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_id": 1,
+                "usuario_nome": "TI",
+                "data_prevista_devolucao": "2025-12-12T16:20:15.468783"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:26:53.441265",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:26:53.440959"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:12.485643",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:12.472303"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.206880",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.196919"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.405253",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.397771"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.593074",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.584524"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:27:13.798092",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:27:13.788967"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:28:30.913751",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000004",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:28:30.903964"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:29:26.821804",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:29:26.821296"
+            }
+        },
+        {
+            "ts": "2025-12-05T16:29:27.572948",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "usuario_logado_id": 1,
+                "data": "2025-12-05T16:29:27.562801"
+            }
+        },
+        {
+            "ts": "2025-12-05T18:24:59.365158",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000015",
+                "item_nome": "Notebook Core i3"
+            }
+        },
+        {
+            "ts": "2025-12-05T18:27:02.291540",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000014",
+                "item_nome": "Notebook Core i3"
+            }
+        },
+        {
+            "ts": "2025-12-05T18:29:16.544052",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000013",
+                "item_nome": "Notebook Core i3"
+            }
+        },
+        {
+            "ts": "2025-12-05T23:36:42.896062",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000821",
+                "item_nome": "Resma de Papel A4"
+            }
+        },
+        {
+            "ts": "2025-12-05T23:59:47.452308",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000015",
+                "item_nome": "Notebook Core i3"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:10:22.266818",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000825",
+                "item_nome": "Resma de Papel A4"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:14:02.914679",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000512",
+                "item_nome": "Mesa de Professor"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:14:13.082363",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000516",
+                "item_nome": "Mesa de Professor"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:15:48.330842",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000511",
+                "item_nome": "Mesa de Professor"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:25:33.056232",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004742",
+                "item_nome": "Marcador de Quadro Branco"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:25:43.833221",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000504",
+                "item_nome": "C\u00e2mera de seguran\u00e7a"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:30:11.179000",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000509",
+                "item_nome": "Mesa de Professor"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:39:41.858170",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000821",
+                "item_nome": "Resma de Papel A4",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:39:45.774388",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000821",
+                "item_nome": "Resma de Papel A4",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:44.854212",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000006",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:48.957485",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000007",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:51.430158",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000008",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:54.334425",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000009",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:40:56.958967",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000010",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:38.973561",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000006",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:41.460957",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000008",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:44.426679",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000010",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:46.532423",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:41:49.133036",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000007",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:03.407153",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000011",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:08.025589",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000012",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:10.947738",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000013",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:39.268044",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000013",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:42.801544",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000011",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:46:45.516141",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000012",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:50:14.696049",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000015",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:50:40.275845",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000015",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:57:54.651654",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004761",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T00:57:58.216792",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "004761",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:23:30.210323",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004761",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:23:35.542783",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "004761",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:23:53.723868",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "TIAGO"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:24:03.334526",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "TIAGO"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:25:28.290854",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T01:25:31.458292",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "004748",
+                "item_nome": "Projetor port\u00e1til mini",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:17:41.328910",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "00",
+                "item_nome": "Cabo VGA 1.5m"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:18:11.528808",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "7",
+                "item_nome": "Ar-Condicionado 12.000 BTU"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:20:18.004773",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "5",
+                "item_nome": "Ar-Condicionado 12.000 BTU"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:20:47.349379",
+            "tipo": "EXCLUS\u00c3O DE USU\u00c1RIO",
+            "detalhes": {
+                "usuario_id": 7,
+                "usuario_nome": "TESTE"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:22.261139",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000018",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:24.874870",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000018",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:37.785914",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000001",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:21:41.982472",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000001",
+                "item_nome": "Notebook Core i3",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:32:26.176250",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000016",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:32:29.260337",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000016",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:33:02.919962",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "9",
+                "item_nome": "Ar-Condicionado 12.000 BTU"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:34:41.069194",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000507",
+                "item_nome": "Mesa de Professor",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:34:43.638039",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000507",
+                "item_nome": "Mesa de Professor",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:40:18.953550",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000009",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:40:22.324729",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000009",
+                "item_nome": "Notebook Core i3",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:40:49.606030",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "3",
+                "item_nome": "Ar-Condicionado 18.000 BTU",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:40:55.681736",
+            "tipo": "EXCLUS\u00c3O DE ITEM",
+            "detalhes": {
+                "patrimonio": "3",
+                "item_nome": "Ar-Condicionado 18.000 BTU"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:42:02.022471",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000816",
+                "item_nome": "Resma de Papel A4",
+                "usuario": "PEDRO"
+            }
+        },
+        {
+            "ts": "2025-12-06T13:42:08.241526",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000816",
+                "item_nome": "Resma de Papel A4",
+                "usuario": "PEDRO"
+            }
+        }
+    ],
+    "ultima_atualizacao": "2025-12-06T13:42:08.241532"
+}
