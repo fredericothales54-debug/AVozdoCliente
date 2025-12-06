@@ -577,4 +577,4 @@ class AppView:
         btn_frm = tk.Frame(parent, bg="white")
         btn_frm.pack(pady=10)
         ttk.Button(btn_frm, text="➕ Cadastrar", command=criar).pack(side="left", padx=10)
-        ttk.Button(btn_frm, text=" Excluir", command=excluir).pack(side="left", padx=10)
+        ttk.Button(btn_frm, text="🗑️ Excluir", command=excluir).pack(side="left", padx=10)
