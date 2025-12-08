@@ -1,0 +1,233 @@
+-- ====================================================================
+-- 1. CRIAÇÃO DA ESTRUTURA DO BANCO DE DADOS
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS USUARIOS (
+    id_usuarios SERIAL PRIMARY KEY,
+    nomes_usuarios TEXT,
+    senhas_usuarios TEXT
+);
+
+CREATE TABLE IF NOT EXISTS CARGOS (
+    id_cargos SERIAL PRIMARY KEY,
+    nomes_cargos TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS NIVEL_PERMISSOES (
+    id_nivel_permissoes SERIAL PRIMARY KEY,
+    nomes_permissoes TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS LOCAIS (
+    id_locais SERIAL PRIMARY KEY,
+    numero_sala TEXT,
+    nome_estrutura TEXT,
+    numero_posicao TEXT
+);
+
+CREATE TABLE IF NOT EXISTS STATUS (
+    id_status SERIAL PRIMARY KEY,
+    nomes_status TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS CATEGORIAS (
+    id_categorias SERIAL PRIMARY KEY,
+    nomes_categorias TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS NOMES_ITENS (
+    id_nomes_itens SERIAL PRIMARY KEY,
+    nomes_itens TEXT UNIQUE,
+    id_categorias INTEGER NOT NULL,
+    FOREIGN KEY (id_categorias) REFERENCES CATEGORIAS(id_categorias)
+);
+
+CREATE TABLE IF NOT EXISTS ITENS (
+    id_itens SERIAL PRIMARY KEY,
+    id_nomes_itens INTEGER NOT NULL,
+    numero_patrimonio TEXT UNIQUE,
+    id_status INTEGER,
+    FOREIGN KEY (id_nomes_itens) REFERENCES NOMES_ITENS(id_nomes_itens),
+    FOREIGN KEY (id_status) REFERENCES STATUS(id_status)
+);
+
+CREATE TABLE IF NOT EXISTS JUNCAO_CARGOS_PERMISSOES (
+    id_juncao_cargos_permissoes SERIAL PRIMARY KEY,
+    id_cargos INTEGER NOT NULL,
+    id_nivel_permissoes INTEGER NOT NULL,
+    FOREIGN KEY (id_cargos) REFERENCES CARGOS(id_cargos),
+    FOREIGN KEY (id_nivel_permissoes) REFERENCES NIVEL_PERMISSOES(id_nivel_permissoes),
+    UNIQUE (id_cargos, id_nivel_permissoes)
+);
+
+CREATE TABLE IF NOT EXISTS JUNCAO_USUARIOS_CP (
+    id_juncao_usuario_cp SERIAL PRIMARY KEY,
+    id_usuarios INTEGER NOT NULL,
+    id_juncao_cargos_permissoes INTEGER NOT NULL,
+    FOREIGN KEY (id_usuarios) REFERENCES USUARIOS(id_usuarios),
+    FOREIGN KEY (id_juncao_cargos_permissoes) REFERENCES JUNCAO_CARGOS_PERMISSOES(id_juncao_cargos_permissoes)
+);
+
+CREATE TABLE IF NOT EXISTS MOVIMENTACOES (
+    id_movimentacoes SERIAL PRIMARY KEY,
+    id_itens INTEGER,
+    id_status INTEGER,
+    id_juncao_usuario_cp INTEGER,
+    data TIMESTAMP WITHOUT TIME ZONE,
+    id_locais INTEGER,
+    FOREIGN KEY (id_itens) REFERENCES ITENS(id_itens),
+    FOREIGN KEY (id_status) REFERENCES STATUS(id_status),
+    FOREIGN KEY (id_juncao_usuario_cp) REFERENCES JUNCAO_USUARIOS_CP(id_juncao_usuario_cp),
+    FOREIGN KEY (id_locais) REFERENCES LOCAIS(id_locais)
+);
+
+
+-- ====================================================================
+-- 2. INSERÇÃO DE DADOS ESTÁTICOS DE CONTROLE
+-- ====================================================================
+INSERT INTO CARGOS (nomes_cargos) VALUES
+('AUXILIAR DE BIBLIOTECA'), ('COORDENADOR ADMINISTRATIVO'), ('PROFESSOR'), ('TÉCNICO DE TI');
+
+INSERT INTO NIVEL_PERMISSOES (nomes_permissoes) VALUES
+('TI'), ('ADMIN'), ('USER');
+
+INSERT INTO STATUS (nomes_status) VALUES
+('DISPONÍVEL'), ('EM USO'), ('EXTRAVIADO');
+
+INSERT INTO CATEGORIAS (nomes_categorias) VALUES
+('Tecnologia e Informática'), ('Mobiliário e Estrutura'), ('Material de Escritório (Consumível)'), 
+('Audiovisual e Periféricos'), ('Climatização');
+
+INSERT INTO USUARIOS (nomes_usuarios, senhas_usuarios) VALUES
+('TI', '0000'), 
+('ALMOXARIFADO', '0000');
+
+INSERT INTO JUNCAO_CARGOS_PERMISSOES (id_cargos, id_nivel_permissoes) VALUES
+(1, 2), (2, 2), (3, 3), (4, 1);
+
+INSERT INTO JUNCAO_USUARIOS_CP (id_usuarios, id_juncao_cargos_permissoes) VALUES
+(1, 4),
+(2, 1);
+
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 1', 'A1'), ('201 - Almoxarifado', 'Prateleira 1', 'A2'), ('201 - Almoxarifado', 'Prateleira 1', 'A3'), ('201 - Almoxarifado', 'Prateleira 1', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 2', 'A1'), ('201 - Almoxarifado', 'Prateleira 2', 'A2'), ('201 - Almoxarifado', 'Prateleira 2', 'A3'), ('201 - Almoxarifado', 'Prateleira 2', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 3', 'A1'), ('201 - Almoxarifado', 'Prateleira 3', 'A2'), ('201 - Almoxarifado', 'Prateleira 3', 'A3'), ('201 - Almoxarifado', 'Prateleira 3', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 4', 'A1'), ('201 - Almoxarifado', 'Prateleira 4', 'A2'), ('201 - Almoxarifado', 'Prateleira 4', 'A3'), ('201 - Almoxarifado', 'Prateleira 4', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 5', 'A1'), ('201 - Almoxarifado', 'Prateleira 5', 'A2'), ('201 - Almoxarifado', 'Prateleira 5', 'A3'), ('201 - Almoxarifado', 'Prateleira 5', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 6', 'A1'), ('201 - Almoxarifado', 'Prateleira 6', 'A2'), ('201 - Almoxarifado', 'Prateleira 6', 'A3'), ('201 - Almoxarifado', 'Prateleira 6', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 7', 'A1'), ('201 - Almoxarifado', 'Prateleira 7', 'A2'), ('201 - Almoxarifado', 'Prateleira 7', 'A3'), ('201 - Almoxarifado', 'Prateleira 7', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 8', 'A1'), ('201 - Almoxarifado', 'Prateleira 8', 'A2'), ('201 - Almoxarifado', 'Prateleira 8', 'A3'), ('201 - Almoxarifado', 'Prateleira 8', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 9', 'A1'), ('201 - Almoxarifado', 'Prateleira 9', 'A2'), ('201 - Almoxarifado', 'Prateleira 9', 'A3'), ('201 - Almoxarifado', 'Prateleira 9', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 10', 'A1'), ('201 - Almoxarifado', 'Prateleira 10', 'A2'), ('201 - Almoxarifado', 'Prateleira 10', 'A3'), ('201 - Almoxarifado', 'Prateleira 10', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 11', 'A1'), ('201 - Almoxarifado', 'Prateleira 11', 'A2'), ('201 - Almoxarifado', 'Prateleira 11', 'A3'), ('201 - Almoxarifado', 'Prateleira 11', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 12', 'A1'), ('201 - Almoxarifado', 'Prateleira 12', 'A2'), ('201 - Almoxarifado', 'Prateleira 12', 'A3'), ('201 - Almoxarifado', 'Prateleira 12', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 13', 'A1'), ('201 - Almoxarifado', 'Prateleira 13', 'A2'), ('201 - Almoxarifado', 'Prateleira 13', 'A3'), ('201 - Almoxarifado', 'Prateleira 13', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 14', 'A1'), ('201 - Almoxarifado', 'Prateleira 14', 'A2'), ('201 - Almoxarifado', 'Prateleira 14', 'A3'), ('201 - Almoxarifado', 'Prateleira 14', 'A4');
+INSERT INTO LOCAIS (numero_sala, nome_estrutura, numero_posicao) VALUES 
+('201 - Almoxarifado', 'Prateleira 15', 'A1'), ('201 - Almoxarifado', 'Prateleira 15', 'A2'), ('201 - Almoxarifado', 'Prateleira 15', 'A3');
+
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Notebook Core i3', 1), ('Notebook Core i7', 1), ('Computador Desktop Completo', 1), ('Monitor 24 polegadas', 1),
+('Estabilizador 500VA', 1), ('Mouse USB', 1), ('Teclado USB', 1), ('Headset com Microfone', 1),
+('Cabo HDMI 1.8m', 1), ('Cabo VGA 1.5m', 1), ('Adaptador USB-C -> HDMI', 1), ('Pen Drive 32GB', 1),
+('Roteador Wi-Fi', 1), ('Switch 24 portas', 1), ('Patch Cords diversos', 1), ('Nobreak 1400VA', 1),
+('Scanner', 1), ('Impressora Laser', 1), ('Multifuncional', 1), ('Leitor de código de barras', 1),
+('Tablet 10"', 1), ('Câmera de segurança', 1);
+
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Mesa de Professor', 2), ('Mesa de Escritório', 2), ('Cadeira Giratória', 2), ('Cadeira Escolar', 2),
+('Armário de Aço 2 portas', 2), ('Estante de livros', 2), ('Quadro Branco pequeno', 2), ('Tripé para projetor', 2),
+('Caixa organizadora plástica', 2), ('Extensão elétrica 5 tomadas', 2);
+
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Resma de Papel A4', 3), ('Caneta Azul', 3), ('Caneta Preta', 3), ('Caneta Vermelha', 3),
+('Lápis', 3), 
+('Borracha', 3), ('Apontador', 3), ('Grampeador', 3),
+('Caixa de Grampos', 3), ('Cola Bastão', 3), ('Cola Líquida', 3), ('Post-it bloco pequeno', 3),
+('Caderno 96 folhas', 3), ('Pasta catálogo', 3), 
+('Pasta L', 3),
+('Envelope pardo', 3), ('Tesoura escolar', 3), ('Régua 30cm', 3), ('Fita adesiva', 3), ('Fita dupla face', 3),
+('Marcador de Quadro Branco', 3);
+
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Datashow Projetor', 4), ('Projetor portátil mini', 4), ('Caixa de Som Amplificada', 4), ('Microfone sem fio', 4);
+
+INSERT INTO NOMES_ITENS (nomes_itens, id_categorias) VALUES
+('Ar-Condicionado 12.000 BTU', 5), ('Ar-Condicionado 18.000 BTU', 5);
+
+
+-- ====================================================================
+-- 3. INSERÇÃO DINÂMICA DE 4729 ITENS E MOVIMENTAÇÕES (PL/pgSQL)
+-- ====================================================================
+SET TIME ZONE 'America/Sao_Paulo';
+
+DO $$
+DECLARE
+    item_type RECORD;
+    patrimonio_seq INTEGER := 1;
+    id_item_atual INTEGER;
+    current_locais_id INTEGER := 1;
+    item_quantity INTEGER;
+    item_id_nomes_itens INTEGER;
+    almoxarifado_jucp_id CONSTANT INTEGER := 2; 
+BEGIN
+    CREATE TEMP TABLE IF NOT EXISTS item_data (
+        id_nomes_itens INTEGER PRIMARY KEY,
+        quantidade INTEGER
+    );
+
+    INSERT INTO item_data (id_nomes_itens, quantidade) VALUES
+    (1, 40), (2, 36), (3, 20), (4, 25), (5, 18), (6, 60), (7, 55), (8, 35), (9, 30), (10, 15), 
+    (11, 12), (12, 40), (13, 8), (14, 6), (15, 50), (16, 5), (17, 2), (18, 6), (19, 4), (20, 10),
+    (21, 15), (22, 12), (23, 15), (24, 10), (25, 25), (26, 120), (27, 8), (28, 6), (29, 20), (30, 4), 
+    (31, 60), (32, 40), (33, 200), (34, 300), (35, 300), (36, 150), 
+    (37, 520), -- Lápis (Ajustado para 520 para atingir o total de 4729)
+    (38, 200), (39, 120), (40, 20), (41, 150), (42, 100), (43, 80), (44, 90), (45, 180), (46, 70), 
+    (47, 520), -- Pasta L (Ajustado para 520 para atingir o total de 4729)
+    (48, 300), (49, 120), (50, 150), (51, 100), (52, 60), (53, 200), (54, 4), (55, 2), (56, 3), 
+    (57, 4), (58, 10), (59, 4);
+
+    FOR item_type IN (SELECT * FROM item_data ORDER BY id_nomes_itens)
+    LOOP
+        item_id_nomes_itens := item_type.id_nomes_itens;
+        item_quantity := item_type.quantidade;
+        
+        FOR i IN 1..item_quantity
+        LOOP
+            DECLARE
+                patrimonio_text TEXT;
+            BEGIN
+                patrimonio_text := lpad(patrimonio_seq::text, 6, '0');
+
+                EXECUTE 'INSERT INTO ITENS (id_nomes_itens, numero_patrimonio, id_status) 
+                             VALUES ($1, $2, 1) RETURNING id_itens'
+                INTO id_item_atual
+                USING item_id_nomes_itens, patrimonio_text;
+
+                EXECUTE 'INSERT INTO MOVIMENTACOES (id_itens, id_status, id_juncao_usuario_cp, data, id_locais)
+                             VALUES ($1, 1, $2, $3, $4)'
+                USING id_item_atual, almoxarifado_jucp_id, '2024-10-27 10:00:00'::timestamp without time zone, current_locais_id;
+
+                patrimonio_seq := patrimonio_seq + 1;
+            END;
+        END LOOP;
+        
+        current_locais_id := current_locais_id + 1;
+
+    END LOOP;
+    
+    DROP TABLE item_data;
+END $$;
