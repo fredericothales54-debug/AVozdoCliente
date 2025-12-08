@@ -7,7 +7,7 @@ import psycopg2
 DB_HOST="localhost"
 DB_NAME="A_Voz_do_Cliente"
 DB_USER="postgres"
-DB_PASS="88084099"
+DB_PASS="1234"
 DB_PORT="5432"
 def main():
     db_conn=True
