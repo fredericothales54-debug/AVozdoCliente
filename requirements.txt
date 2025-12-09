@@ -1,0 +1,10 @@
+#Banco de Dados
+psycopg2-binary==2.9.9
+
+
+#Dados
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Utilitários
+python-dotenv==1.0.0
