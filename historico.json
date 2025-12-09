@@ -506,7 +506,25 @@
                 "item_nome": "Notebook Core i3",
                 "usuario": "PEDRO"
             }
+        },
+        {
+            "ts": "2025-12-09T08:53:52.737471",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000515",
+                "item_nome": "Mesa de Professor",
+                "usuario": "TI"
+            }
+        },
+        {
+            "ts": "2025-12-09T08:54:08.627545",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000515",
+                "item_nome": "Mesa de Professor",
+                "usuario": "TI"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-06T13:21:41.982479"
+    "ultima_atualizacao": "2025-12-09T08:54:08.627552"
 }
