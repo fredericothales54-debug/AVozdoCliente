@@ -524,8 +524,8 @@ class AppView:
             
             resultado = self.controller.cadastrar_novo_usuario_controller(
                 nome=nome, 
-                matricula=mat, 
-                senha_texto_puro=senha
+                mat=mat, 
+                senha=senha
             )
             
             if resultado['status'] == 'sucesso':

@@ -524,7 +524,43 @@
                 "item_nome": "Mesa de Professor",
                 "usuario": "TI"
             }
+        },
+        {
+            "ts": "2025-12-09T20:24:44.762797",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "99999999",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TALES"
+            }
+        },
+        {
+            "ts": "2025-12-09T20:24:49.011225",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "99999999",
+                "item_nome": "Ar-Condicionado 12.000 BTU",
+                "usuario": "TALES"
+            }
+        },
+        {
+            "ts": "2025-12-09T20:28:13.188642",
+            "tipo": "EMPR\u00c9STIMO",
+            "detalhes": {
+                "patrimonio": "000022",
+                "item_nome": "Notebook Core i3",
+                "usuario": "GUSTAVO"
+            }
+        },
+        {
+            "ts": "2025-12-09T20:28:49.320565",
+            "tipo": "DEVOLU\u00c7\u00c3O",
+            "detalhes": {
+                "patrimonio": "000022",
+                "item_nome": "Notebook Core i3",
+                "usuario": "GUSTAVO"
+            }
         }
     ],
-    "ultima_atualizacao": "2025-12-09T08:54:08.627552"
+    "ultima_atualizacao": "2025-12-09T20:28:49.320579"
 }
